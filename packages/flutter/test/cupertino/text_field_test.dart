@@ -3764,7 +3764,7 @@ void main() {
         // TODO(Renzo-Olivares): Enable, currently broken because selection overlay blocks the TextSelectionGestureDetector.
         final TextEditingController controller = TextEditingController();
         addTearDown(controller.dispose);
-        final bool isTargetPlatformApple = defaultTargetPlatform == TargetPlatform.iOS;
+        final bool isTargetPlatformCupertino = defaultTargetPlatform == TargetPlatform.iOS;
 
         await tester.pumpWidget(
           CupertinoApp(
@@ -3802,8 +3802,8 @@ void main() {
         await gesture.up();
         await tester.pump();
 
-        expect(controller.selection.baseOffset, isTargetPlatformApple ? 4 : 6);
-        expect(controller.selection.extentOffset, isTargetPlatformApple ? 6 : 7);
+        expect(controller.selection.baseOffset, isTargetPlatformCupertino ? 4 : 6);
+        expect(controller.selection.extentOffset, isTargetPlatformCupertino ? 6 : 7);
 
         // Here we tap on same position again, to register a triple tap. This will select
         // the paragraph at the tapped position.
@@ -3824,7 +3824,7 @@ void main() {
       (WidgetTester tester) async {
         final TextEditingController controller = TextEditingController();
         addTearDown(controller.dispose);
-        final bool isTargetPlatformApple = defaultTargetPlatform == TargetPlatform.iOS;
+        final bool isTargetPlatformCupertino = defaultTargetPlatform == TargetPlatform.iOS;
 
         await tester.pumpWidget(
           CupertinoApp(
@@ -3853,7 +3853,7 @@ void main() {
         await tester.pump();
 
         expect(controller.selection.isCollapsed, true);
-        expect(controller.selection.baseOffset, isTargetPlatformApple ? 5 : 3);
+        expect(controller.selection.baseOffset, isTargetPlatformCupertino ? 5 : 3);
 
         // Here we tap on same position again, to register a double tap. This will select
         // the word at the tapped position.
@@ -4377,7 +4377,7 @@ void main() {
           text: testValueB,
         );
         addTearDown(controller.dispose);
-        final bool isTargetPlatformApple = defaultTargetPlatform == TargetPlatform.iOS;
+        final bool isTargetPlatformCupertino = defaultTargetPlatform == TargetPlatform.iOS;
 
         await tester.pumpWidget(
           CupertinoApp(
@@ -4401,7 +4401,7 @@ void main() {
         await tester.pump();
 
         expect(controller.selection.isCollapsed, true);
-        expect(controller.selection.baseOffset, isTargetPlatformApple ? 5 : 3);
+        expect(controller.selection.baseOffset, isTargetPlatformCupertino ? 5 : 3);
 
         // Here we tap on same position again, to register a double tap. This will select
         // the word at the tapped position.
@@ -5722,7 +5722,7 @@ void main() {
   testWidgets('Selection updates on tap up (Mobile platforms)', (WidgetTester tester) async {
     final TextEditingController controller = TextEditingController();
     addTearDown(controller.dispose);
-    final bool isTargetPlatformApple = defaultTargetPlatform == TargetPlatform.iOS;
+    final bool isTargetPlatformCupertino = defaultTargetPlatform == TargetPlatform.iOS;
 
     await tester.pumpWidget(
       CupertinoApp(
@@ -5759,14 +5759,14 @@ void main() {
     await touchGesture.up();
     await tester.pumpAndSettle(kDoubleTapTimeout);
     // On iOS, a tap to select, selects the word edge instead of the exact tap position.
-    expect(controller.selection.baseOffset, isTargetPlatformApple ? 7 : 5);
-    expect(controller.selection.extentOffset, isTargetPlatformApple ? 7 : 5);
+    expect(controller.selection.baseOffset, isTargetPlatformCupertino ? 7 : 5);
+    expect(controller.selection.extentOffset, isTargetPlatformCupertino ? 7 : 5);
 
     // Selection should stay the same since it is set on tap up for mobile platforms.
     await touchGesture.down(gPos);
     await tester.pump();
-    expect(controller.selection.baseOffset, isTargetPlatformApple ? 7 : 5);
-    expect(controller.selection.extentOffset, isTargetPlatformApple ? 7 : 5);
+    expect(controller.selection.baseOffset, isTargetPlatformCupertino ? 7 : 5);
+    expect(controller.selection.extentOffset, isTargetPlatformCupertino ? 7 : 5);
 
     await touchGesture.up();
     await tester.pumpAndSettle();

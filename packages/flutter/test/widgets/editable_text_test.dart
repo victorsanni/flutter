@@ -7310,7 +7310,7 @@ void main() {
     );
     expect(controller.text, equals(testText), reason: 'on $platform');
 
-    final bool platformIsApple = defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS;
+    final bool platformIsCupertino = defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS;
     // Move down one paragraph.
     await sendKeys(
       tester,
@@ -7438,7 +7438,7 @@ void main() {
       equals(
         TextSelection(
           baseOffset: 10,
-          extentOffset: platformIsApple ? 10 : 0,
+          extentOffset: platformIsCupertino ? 10 : 0,
         ),
       ),
       reason: 'on $platform',
@@ -7485,8 +7485,8 @@ void main() {
       equals(
         TextSelection(
           baseOffset: 10,
-          extentOffset: platformIsApple ? 10 : 20,
-          affinity: platformIsApple ? TextAffinity.upstream : TextAffinity.downstream,
+          extentOffset: platformIsCupertino ? 10 : 20,
+          affinity: platformIsCupertino ? TextAffinity.upstream : TextAffinity.downstream,
         ),
       ),
       reason: 'on $platform',

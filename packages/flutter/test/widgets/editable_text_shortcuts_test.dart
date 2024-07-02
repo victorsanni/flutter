@@ -103,7 +103,7 @@ void main() {
 
   group('Common text editing shortcuts: ',
     () {
-      final TargetPlatformVariant allExceptApple = TargetPlatformVariant.all(excluding: <TargetPlatform>{TargetPlatform.macOS, TargetPlatform.iOS});
+      final TargetPlatformVariant allExceptCupertino = TargetPlatformVariant.all(excluding: <TargetPlatform>{TargetPlatform.macOS, TargetPlatform.iOS});
 
       group('backspace', () {
         const LogicalKeyboardKey trigger = LogicalKeyboardKey.backspace;
@@ -471,8 +471,8 @@ void main() {
       group('word modifier + backspace', () {
         const LogicalKeyboardKey trigger = LogicalKeyboardKey.backspace;
         SingleActivator wordModifierBackspace() {
-          final bool isApple = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
-          return SingleActivator(trigger, control: !isApple, alt: isApple);
+          final bool isCupertino = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
+          return SingleActivator(trigger, control: !isCupertino, alt: isCupertino);
         }
 
         testWidgets('WordModifier-backspace', (WidgetTester tester) async {
@@ -611,8 +611,8 @@ void main() {
       group('word modifier + delete', () {
         const LogicalKeyboardKey trigger = LogicalKeyboardKey.delete;
         SingleActivator wordModifierDelete() {
-          final bool isApple = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
-          return SingleActivator(trigger, control: !isApple, alt: isApple);
+          final bool isCupertino = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
+          return SingleActivator(trigger, control: !isCupertino, alt: isCupertino);
         }
 
         testWidgets('WordModifier-delete', (WidgetTester tester) async {
@@ -744,8 +744,8 @@ void main() {
       group('line modifier + backspace', () {
         const LogicalKeyboardKey trigger = LogicalKeyboardKey.backspace;
         SingleActivator lineModifierBackspace() {
-          final bool isApple = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
-          return SingleActivator(trigger, meta: isApple, alt: !isApple);
+          final bool isCupertino = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
+          return SingleActivator(trigger, meta: isCupertino, alt: !isCupertino);
         }
 
         testWidgets('alt-backspace', (WidgetTester tester) async {
@@ -924,8 +924,8 @@ void main() {
       group('line modifier + delete', () {
         const LogicalKeyboardKey trigger = LogicalKeyboardKey.delete;
         SingleActivator lineModifierDelete() {
-          final bool isApple = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
-          return SingleActivator(trigger, meta: isApple, alt: !isApple);
+          final bool isCupertino = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
+          return SingleActivator(trigger, meta: isCupertino, alt: !isCupertino);
         }
 
         testWidgets('alt-delete', (WidgetTester tester) async {
@@ -1146,7 +1146,7 @@ void main() {
             expect(controller.selection, const TextSelection.collapsed(
               offset: 4,
             ));
-          }, variant: allExceptApple);
+          }, variant: allExceptCupertino);
 
           testWidgets('line modifier + arrow key movement', (WidgetTester tester) async {
             controller.text = testText;
@@ -1160,7 +1160,7 @@ void main() {
             expect(controller.selection, const TextSelection.collapsed(
               offset: 20,
             ));
-          }, variant: allExceptApple);
+          }, variant: allExceptCupertino);
         });
 
         group('right', () {
@@ -1209,7 +1209,7 @@ void main() {
             expect(controller.selection, const TextSelection.collapsed(
               offset: 10,
             ));
-          }, variant: allExceptApple);
+          }, variant: allExceptCupertino);
 
          testWidgets('line modifier + arrow key movement', (WidgetTester tester) async {
             controller.text = testText;
@@ -1224,7 +1224,7 @@ void main() {
               offset: 35, // Before the newline character.
               affinity: TextAffinity.upstream,
             ));
-          }, variant: allExceptApple);
+          }, variant: allExceptCupertino);
         });
 
         group('With initial non-collapsed selection', () {
@@ -1331,7 +1331,7 @@ void main() {
             expect(controller.selection, const TextSelection.collapsed(
               offset: 28, // After "good".
             ));
-          }, variant: allExceptApple);
+          }, variant: allExceptCupertino);
 
          testWidgets('line modifier + arrow key movement', (WidgetTester tester) async {
             controller.text = testText;
@@ -1385,7 +1385,7 @@ void main() {
               offset: 35, // After "people".
               affinity: TextAffinity.upstream,
             ));
-          }, variant: allExceptApple);
+          }, variant: allExceptCupertino);
         });
 
         group('vertical movement', () {
@@ -1843,8 +1843,8 @@ void main() {
   }, skip: kIsWeb); // [intended] on web these keys are handled by the browser.
 
   group('Web does not accept', () {
-    final TargetPlatformVariant allExceptApple = TargetPlatformVariant.all(excluding: <TargetPlatform>{ TargetPlatform.iOS, TargetPlatform.macOS });
-    const TargetPlatformVariant appleOnly = TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.macOS, TargetPlatform.iOS });
+    final TargetPlatformVariant allExceptCupertino = TargetPlatformVariant.all(excluding: <TargetPlatform>{ TargetPlatform.iOS, TargetPlatform.macOS });
+    const TargetPlatformVariant cupertinoOnly = TargetPlatformVariant(<TargetPlatform>{ TargetPlatform.macOS, TargetPlatform.iOS });
     group('macOS shortcuts', () {
 
       testWidgets('word modifier + arrowLeft', (WidgetTester tester) async {
@@ -1857,7 +1857,7 @@ void main() {
         await tester.pump();
 
         expect(controller.selection, const TextSelection.collapsed(offset: 7));
-      }, variant: appleOnly);
+      }, variant: cupertinoOnly);
 
       testWidgets('word modifier + arrowRight', (WidgetTester tester) async {
         controller.text = testText;
@@ -1869,7 +1869,7 @@ void main() {
         await tester.pump();
 
         expect(controller.selection, const TextSelection.collapsed(offset: 7));
-      }, variant: appleOnly);
+      }, variant: cupertinoOnly);
 
       testWidgets('line modifier + arrowLeft', (WidgetTester tester) async {
         controller.text = testText;
@@ -1881,7 +1881,7 @@ void main() {
         await tester.pump();
 
         expect(controller.selection, const TextSelection.collapsed(offset: 24,));
-      }, variant: appleOnly);
+      }, variant: cupertinoOnly);
 
       testWidgets('line modifier + arrowRight', (WidgetTester tester) async {
         controller.text = testText;
@@ -1895,7 +1895,7 @@ void main() {
         expect(controller.selection, const TextSelection.collapsed(
           offset: 24, // Before the newline character.
         ));
-      }, variant: appleOnly);
+      }, variant: cupertinoOnly);
 
       testWidgets('word modifier + arrow key movement', (WidgetTester tester) async {
         controller.text = testText;
@@ -1948,7 +1948,7 @@ void main() {
           baseOffset: 43,
           extentOffset: 24,
         ));
-      }, variant: appleOnly);
+      }, variant: cupertinoOnly);
 
       testWidgets('line modifier + arrow key movement', (WidgetTester tester) async {
         controller.text = testText;
@@ -2004,7 +2004,7 @@ void main() {
           baseOffset: 43,
           extentOffset: 24,
         ));
-      }, variant: appleOnly);
+      }, variant: cupertinoOnly);
     });
 
     testWidgets('vertical movement outside of selection',
@@ -2044,7 +2044,7 @@ void main() {
       await tester.pump();
 
       expect(controller.selection, const TextSelection.collapsed(offset: 0));
-    }, variant: allExceptApple);
+    }, variant: allExceptCupertino);
 
     testWidgets('select all apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2057,7 +2057,7 @@ void main() {
       await tester.pump();
 
       expect(controller.selection, const TextSelection.collapsed(offset: 0));
-    }, variant: appleOnly);
+    }, variant: cupertinoOnly);
 
     testWidgets('copy non apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2072,7 +2072,7 @@ void main() {
 
       final Map<String, dynamic> clipboardData = mockClipboard.clipboardData as Map<String, dynamic>;
       expect(clipboardData['text'], 'empty');
-    }, variant: allExceptApple);
+    }, variant: allExceptCupertino);
 
     testWidgets('copy apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2087,7 +2087,7 @@ void main() {
 
       final Map<String, dynamic> clipboardData = mockClipboard.clipboardData as Map<String, dynamic>;
       expect(clipboardData['text'], 'empty');
-    }, variant: appleOnly);
+    }, variant: cupertinoOnly);
 
     testWidgets('cut non apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2106,7 +2106,7 @@ void main() {
         baseOffset: 0,
         extentOffset: 4,
       ));
-    }, variant: allExceptApple);
+    }, variant: allExceptCupertino);
 
     testWidgets('cut apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2125,7 +2125,7 @@ void main() {
         baseOffset: 0,
         extentOffset: 4,
       ));
-    }, variant: appleOnly);
+    }, variant: cupertinoOnly);
 
     testWidgets('paste non apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2138,7 +2138,7 @@ void main() {
       await tester.pump();
       expect(controller.selection, const TextSelection.collapsed(offset: 0));
       expect(controller.text, testText);
-    }, variant: allExceptApple);
+    }, variant: allExceptCupertino);
 
     testWidgets('paste apple', (WidgetTester tester) async {
       controller.text = testText;
@@ -2151,7 +2151,7 @@ void main() {
       await tester.pump();
       expect(controller.selection, const TextSelection.collapsed(offset: 0));
       expect(controller.text, testText);
-    }, variant: appleOnly);
+    }, variant: cupertinoOnly);
 
   }, skip: !kIsWeb);// [intended] specific tests target web.
 
