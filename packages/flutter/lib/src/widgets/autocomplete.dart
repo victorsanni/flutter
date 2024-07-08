@@ -271,7 +271,7 @@ class RawAutocomplete<T extends Object> extends StatefulWidget {
   final TextEditingValue? initialValue;
 
   /// If the options view overlay should be shown depending on the text editing value.
-  final bool Function(TextEditingValue)? shouldReloadOptionsView;
+  final bool Function(Iterable<T> options)? shouldReloadOptionsView;
 
   /// Calls [AutocompleteFieldViewBuilder]'s onFieldSubmitted callback for the
   /// RawAutocomplete widget indicated by the given [GlobalKey].
@@ -344,10 +344,9 @@ class _RawAutocompleteState<T extends Object> extends State<RawAutocomplete<T>> 
     SingleActivator(LogicalKeyboardKey.arrowDown): AutocompleteNextOptionIntent(),
   };
 
-  bool get _canShowOptionsView => _focusNode.hasFocus && _selection == null && (_options.isNotEmpty || (widget.shouldReloadOptionsView != null && widget.shouldReloadOptionsView!(_textEditingController.value)));
-
+  bool get _canShowOptionsView => _focusNode.hasFocus && _selection == null;
   void _updateOptionsViewVisibility() {
-    if (_canShowOptionsView) {
+    if (_canShowOptionsView && widget.shouldReloadOptionsView!(_options)) {
       _optionsViewController.show();
     } else {
       _optionsViewController.hide();
@@ -357,9 +356,6 @@ class _RawAutocompleteState<T extends Object> extends State<RawAutocomplete<T>> 
   // Called when _textEditingController changes.
   Future<void> _onChangedField() async {
     final TextEditingValue value = _textEditingController.value;
-    if (widget.shouldReloadOptionsView != null && widget.shouldReloadOptionsView!(value)){
-      _updateOptionsViewVisibility();
-    }
     final Iterable<T> options = await widget.optionsBuilder(value);
     _options = options;
     _updateHighlight(_highlightedOptionIndex.value);

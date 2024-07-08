@@ -719,7 +719,7 @@ void main() {
                 return option.contains(textEditingValue.text.toLowerCase());
               });
             },
-            shouldReloadOptionsView: (TextEditingValue value) => true,
+            shouldReloadOptionsView: (_) => true,
             fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
               focusNode = fieldFocusNode;
               textEditingController = fieldTextEditingController;
