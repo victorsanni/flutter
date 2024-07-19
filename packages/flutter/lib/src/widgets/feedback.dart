@@ -125,7 +125,7 @@ abstract final class Feedback {
   /// Provides platform-specific feedback for a long press.
   ///
   /// On Android the platform-typical vibration is triggered. On iOS a
-  /// heavy-impact haptic feedback is triggered alongside the click system
+  /// medium-impact haptic feedback is triggered alongside the click system
   /// sound, which was observed to be the default behavior on a physical iPhone
   /// 15 Pro running iOS version 17.5.
   ///
@@ -142,7 +142,7 @@ abstract final class Feedback {
       case TargetPlatform.iOS:
         return Future.wait(<Future<void>>[
           SystemSound.play(SystemSoundType.click),
-          HapticFeedback.heavyImpact()
+          HapticFeedback.mediumImpact(),
         ]);
       case TargetPlatform.linux:
       case TargetPlatform.macOS:
@@ -155,7 +155,7 @@ abstract final class Feedback {
   /// for a long press before the provided callback is executed.
   ///
   /// On Android the platform-typical vibration is triggered. On iOS a
-  /// heavy-impact haptic feedback is triggered alongside the click system
+  /// medium-impact haptic feedback is triggered alongside the click system
   /// sound, which was observed to be the default behavior on a physical iPhone
   /// 15 Pro running iOS version 17.5.
   ///

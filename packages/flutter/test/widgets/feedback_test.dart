@@ -176,6 +176,7 @@ void main () {
       await tester.tap(find.text('X'));
       await tester.pumpAndSettle(kWaitDuration);
       expect(feedback.hapticCount, 0);
+      expect(feedback.mediumImpactCount, 0);
       expect(feedback.clickSoundCount, 0);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS));
@@ -191,6 +192,7 @@ void main () {
       await tester.longPress(find.text('X'));
       await tester.pumpAndSettle(kWaitDuration);
       expect(feedback.hapticCount, 1);
+      expect(feedback.mediumImpactCount, 1);
       expect(feedback.clickSoundCount, 1);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS));

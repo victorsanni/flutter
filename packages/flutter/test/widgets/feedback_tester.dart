@@ -18,12 +18,19 @@ class FeedbackTester {
   int get hapticCount => _hapticCount;
   int _hapticCount = 0;
 
+  /// The number of times medium impact haptic feedback was requested.
+  int get mediumImpactCount => _mediumImpactCount;
+  int _mediumImpactCount = 0;
+
   /// Number of times the click sound was requested to play.
   int get clickSoundCount => _clickSoundCount;
   int _clickSoundCount = 0;
 
   Future<void> _handler(MethodCall methodCall) async {
     if (methodCall.method == 'HapticFeedback.vibrate') {
+      if (methodCall.arguments == 'HapticFeedbackType.mediumImpact') {
+        _mediumImpactCount++;
+      }
       _hapticCount++;
     }
     if (methodCall.method == 'SystemSound.play' &&
