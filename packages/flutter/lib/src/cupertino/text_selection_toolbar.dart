@@ -377,7 +377,10 @@ class _RenderCupertinoTextSelectionToolbarShape extends RenderShiftedBox {
     }
 
     final bool isAbove = _isAbove(child.size.height);
-    final Offset localAnchor = globalToLocal(isAbove ? _anchorAbove : _anchorBelow);
+    final Offset localAnchor = globalToLocal(
+      isAbove ? _anchorAbove : _anchorBelow,
+      ancestor: child,
+    );
     final double arrowTipX = clampDouble(
       localAnchor.dx,
       _kToolbarBorderRadius.x + _kToolbarArrowSize.width / 2,
@@ -544,12 +547,12 @@ class _CupertinoTextSelectionToolbarContent extends StatefulWidget {
 class _CupertinoTextSelectionToolbarContentState
     extends State<_CupertinoTextSelectionToolbarContent>
     with TickerProviderStateMixin {
+  GlobalKey _toolbarItemsKey = GlobalKey();
   // Controls the fading of the buttons within the menu during page transitions.
   late AnimationController _controller;
   int? _nextPage;
   int _page = 0;
-
-  final GlobalKey _toolbarItemsKey = GlobalKey();
+  double _toolbarHeight = 0.0;
 
   void _onHorizontalDragEnd(DragEndDetails details) {
     final double? velocity = details.primaryVelocity;
@@ -619,6 +622,8 @@ class _CupertinoTextSelectionToolbarContentState
       _nextPage = null;
       _controller.forward();
       _controller.removeStatusListener(_statusListener);
+      _toolbarItemsKey = GlobalKey();
+      _toolbarHeight = (context.findRenderObject()! as RenderBox).size.height;
     }
   }
 
@@ -666,25 +671,49 @@ class _CupertinoTextSelectionToolbarContentState
           return Center(widthFactor: 1.0, heightFactor: 1.0, child: child);
         }).toList();
 
-    return widget.toolbarBuilder(
-      context,
-      widget.anchorAbove,
-      widget.anchorBelow,
-      FadeTransition(
-        opacity: _controller,
-        child: AnimatedSize(
-          duration: _kToolbarTransitionDuration,
-          curve: Curves.decelerate,
-          child: GestureDetector(
-            onHorizontalDragEnd: _onHorizontalDragEnd,
-            child: _CupertinoTextSelectionToolbarItems(
-              key: _toolbarItemsKey,
-              page: _page,
-              backButton: backButton,
-              dividerColor: _kToolbarDividerColor.resolveFrom(context),
-              dividerWidth: 1.0 / MediaQuery.devicePixelRatioOf(context),
-              nextButton: nextButton,
-              children: children,
+    final Alignment toolbarAnimationAlignment =
+        widget.anchorAbove.dy >= _toolbarHeight ? Alignment.bottomLeft : Alignment.topLeft;
+
+    return AnimatedSwitcher(
+      duration: _kToolbarTransitionDuration * 2,
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeOut,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return ScaleTransition(
+          scale: animation,
+          alignment: toolbarAnimationAlignment,
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
+      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+        return Stack(
+          alignment: toolbarAnimationAlignment,
+          children: <Widget>[...previousChildren, if (currentChild != null) currentChild],
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey<List<Widget>>(widget.children),
+        child: widget.toolbarBuilder(
+          context,
+          widget.anchorAbove,
+          widget.anchorBelow,
+          FadeTransition(
+            opacity: _controller,
+            child: AnimatedSize(
+              duration: _kToolbarTransitionDuration,
+              curve: Curves.decelerate,
+              child: GestureDetector(
+                onHorizontalDragEnd: _onHorizontalDragEnd,
+                child: _CupertinoTextSelectionToolbarItems(
+                  key: _toolbarItemsKey,
+                  page: _page,
+                  backButton: backButton,
+                  dividerColor: _kToolbarDividerColor.resolveFrom(context),
+                  dividerWidth: 1.0 / MediaQuery.devicePixelRatioOf(context),
+                  nextButton: nextButton,
+                  children: children,
+                ),
+              ),
             ),
           ),
         ),
