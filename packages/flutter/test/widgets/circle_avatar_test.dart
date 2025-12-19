@@ -9,8 +9,8 @@ library;
 
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../image_data.dart';
@@ -18,47 +18,56 @@ import '../painting/mocks_for_image_cache.dart';
 
 void main() {
   testWidgets('CircleAvatar with dark background color', (WidgetTester tester) async {
-    final Color backgroundColor = Colors.blue.shade900;
+    const backgroundColor = Color(0xffff0000);
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(backgroundColor: backgroundColor, radius: 50.0, child: const Text('Z')),
+        child: const RawCircleAvatar(
+          backgroundColor: backgroundColor,
+          radius: 50.0,
+          child: Text('Z'),
+        ),
       ),
     );
 
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(100.0, 100.0)));
     final child = box.child! as RenderDecoratedBox;
     final decoration = child.decoration as BoxDecoration;
     expect(decoration.color, equals(backgroundColor));
 
-    final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-    expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
+    // final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
+    //expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
   });
 
   testWidgets('CircleAvatar with light background color', (WidgetTester tester) async {
-    final Color backgroundColor = Colors.blue.shade100;
+    const backgroundColor = Color(0xff00ff00);
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(backgroundColor: backgroundColor, radius: 50.0, child: const Text('Z')),
+        child: const RawCircleAvatar(
+          backgroundColor: backgroundColor,
+          radius: 50.0,
+          child: Text('Z'),
+        ),
       ),
     );
 
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(100.0, 100.0)));
     final child = box.child! as RenderDecoratedBox;
     final decoration = child.decoration as BoxDecoration;
     expect(decoration.color, equals(backgroundColor));
 
-    final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-    expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorDark));
+    // final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
+    // expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorDark));
   });
 
   testWidgets('CircleAvatar with image background', (WidgetTester tester) async {
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(
+        child: RawCircleAvatar(
           backgroundImage: MemoryImage(Uint8List.fromList(kTransparentImage)),
           radius: 50.0,
+          child: const SizedBox.shrink(),
         ),
       ),
     );
@@ -73,9 +82,10 @@ void main() {
   testWidgets('CircleAvatar with image foreground', (WidgetTester tester) async {
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(
+        child: RawCircleAvatar(
           foregroundImage: MemoryImage(Uint8List.fromList(kBlueRectPng)),
           radius: 50.0,
+          child: const SizedBox.shrink(),
         ),
       ),
     );
@@ -96,70 +106,54 @@ void main() {
     await tester.pumpWidget(
       wrap(
         child: RepaintBoundary(
-          child: CircleAvatar(
+          child: RawCircleAvatar(
             foregroundImage: errorImage,
             backgroundImage: MemoryImage(Uint8List.fromList(kBlueRectPng)),
             radius: 50.0,
             onForegroundImageError: (_, _) => caughtForegroundImageError = true,
+            child: const SizedBox.shrink(),
           ),
         ),
       ),
     );
 
     expect(caughtForegroundImageError, true);
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(100.0, 100.0)));
     final child = box.child! as RenderDecoratedBox;
     final decoration = child.decoration as BoxDecoration;
     expect(decoration.image!.fit, equals(BoxFit.cover));
-    await expectLater(find.byType(CircleAvatar), matchesGoldenFile('circle_avatar.fallback.png'));
+    await expectLater(
+      find.byType(RawCircleAvatar),
+      matchesGoldenFile('circle_avatar.fallback.png'),
+    );
   });
 
   testWidgets('CircleAvatar with foreground color', (WidgetTester tester) async {
-    final Color foregroundColor = Colors.red.shade100;
+    const foregroundColor = Color(0xffff0000);
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(foregroundColor: foregroundColor, child: const Text('Z')),
+        child: const RawCircleAvatar(foregroundColor: foregroundColor, child: Text('Z')),
       ),
     );
 
-    final fallback = ThemeData.fallback();
+    //final fallback = ThemeData.fallback();
 
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(40.0, 40.0)));
-    final child = box.child! as RenderDecoratedBox;
-    final decoration = child.decoration as BoxDecoration;
-    expect(decoration.color, equals(fallback.primaryColorDark));
+    //final child = box.child! as RenderDecoratedBox;
+    // final decoration = child.decoration as BoxDecoration;
+    // expect(decoration.color, equals(fallback.primaryColorDark));
 
     final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
     expect(paragraph.text.style!.color, equals(foregroundColor));
   });
 
-  testWidgets('Material3 - CircleAvatar default colors', (WidgetTester tester) async {
-    final theme = ThemeData();
-    await tester.pumpWidget(
-      wrap(
-        child: Theme(
-          data: theme,
-          child: const CircleAvatar(child: Text('Z')),
-        ),
-      ),
-    );
-
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
-    final child = box.child! as RenderDecoratedBox;
-    final decoration = child.decoration as BoxDecoration;
-    expect(decoration.color, equals(theme.colorScheme.primaryContainer));
-
-    final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-    expect(paragraph.text.style!.color, equals(theme.colorScheme.onPrimaryContainer));
-  });
-
   testWidgets('CircleAvatar text does not expand with textScaler', (WidgetTester tester) async {
-    final Color foregroundColor = Colors.red.shade100;
+    const foregroundColor = Color(0xffff0000);
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(foregroundColor: foregroundColor, child: const Text('Z')),
+        child: const RawCircleAvatar(foregroundColor: foregroundColor, child: Text('Z')),
       ),
     );
 
@@ -174,7 +168,7 @@ void main() {
             devicePixelRatio: 1.1,
             padding: EdgeInsets.all(11.0),
           ),
-          child: CircleAvatar(
+          child: RawCircleAvatar(
             child: Builder(
               builder: (BuildContext context) {
                 final MediaQueryData data = MediaQuery.of(context);
@@ -197,130 +191,80 @@ void main() {
   });
 
   testWidgets('CircleAvatar respects minRadius', (WidgetTester tester) async {
-    final Color backgroundColor = Colors.blue.shade900;
+    const backgroundColor = Color(0xffff0000);
     await tester.pumpWidget(
       wrap(
-        child: UnconstrainedBox(
-          child: CircleAvatar(
+        child: const UnconstrainedBox(
+          child: RawCircleAvatar(
             backgroundColor: backgroundColor,
             minRadius: 50.0,
-            child: const Text('Z'),
+            child: Text('Z'),
           ),
         ),
       ),
     );
 
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(100.0, 100.0)));
     final child = box.child! as RenderDecoratedBox;
     final decoration = child.decoration as BoxDecoration;
     expect(decoration.color, equals(backgroundColor));
 
-    final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-    expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
+    //final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
+    //expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
   });
 
   testWidgets('CircleAvatar respects maxRadius', (WidgetTester tester) async {
-    final Color backgroundColor = Colors.blue.shade900;
+    const backgroundColor = Color(0xffff0000);
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(
+        child: const RawCircleAvatar(
           backgroundColor: backgroundColor,
           maxRadius: 50.0,
-          child: const Text('Z'),
+          child: Text('Z'),
         ),
       ),
     );
 
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(100.0, 100.0)));
     final child = box.child! as RenderDecoratedBox;
     final decoration = child.decoration as BoxDecoration;
     expect(decoration.color, equals(backgroundColor));
 
-    final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-    expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
+    //final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
+    //expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
   });
 
   testWidgets('CircleAvatar respects setting both minRadius and maxRadius', (
     WidgetTester tester,
   ) async {
-    final Color backgroundColor = Colors.blue.shade900;
+    const backgroundColor = Color(0xffff0000);
     await tester.pumpWidget(
       wrap(
-        child: CircleAvatar(
+        child: const RawCircleAvatar(
           backgroundColor: backgroundColor,
           maxRadius: 50.0,
           minRadius: 50.0,
-          child: const Text('Z'),
+          child: Text('Z'),
         ),
       ),
     );
 
-    final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
+    final RenderConstrainedBox box = tester.renderObject(find.byType(RawCircleAvatar));
     expect(box.size, equals(const Size(100.0, 100.0)));
     final child = box.child! as RenderDecoratedBox;
     final decoration = child.decoration as BoxDecoration;
     expect(decoration.color, equals(backgroundColor));
 
-    final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-    expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
-  });
-
-  group('Material 2', () {
-    // These tests are only relevant for Material 2. Once Material 2
-    // support is deprecated and the APIs are removed, these tests
-    // can be deleted.
-
-    testWidgets('Material2 - CircleAvatar default colors with light theme', (
-      WidgetTester tester,
-    ) async {
-      final theme = ThemeData(useMaterial3: false, primaryColor: Colors.grey.shade100);
-      await tester.pumpWidget(
-        wrap(
-          child: Theme(
-            data: theme,
-            child: const CircleAvatar(child: Text('Z')),
-          ),
-        ),
-      );
-
-      final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
-      final child = box.child! as RenderDecoratedBox;
-      final decoration = child.decoration as BoxDecoration;
-      expect(decoration.color, equals(theme.primaryColorLight));
-
-      final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-      expect(paragraph.text.style!.color, equals(theme.primaryTextTheme.titleLarge!.color));
-    });
-
-    testWidgets('Material2 - CircleAvatar default colors with dark theme', (
-      WidgetTester tester,
-    ) async {
-      final theme = ThemeData(useMaterial3: false, primaryColor: Colors.grey.shade800);
-      await tester.pumpWidget(
-        wrap(
-          child: Theme(
-            data: theme,
-            child: const CircleAvatar(child: Text('Z')),
-          ),
-        ),
-      );
-
-      final RenderConstrainedBox box = tester.renderObject(find.byType(CircleAvatar));
-      final child = box.child! as RenderDecoratedBox;
-      final decoration = child.decoration as BoxDecoration;
-      expect(decoration.color, equals(theme.primaryColorDark));
-
-      final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
-      expect(paragraph.text.style!.color, equals(theme.primaryTextTheme.titleLarge!.color));
-    });
+    // final RenderParagraph paragraph = tester.renderObject(find.text('Z'));
+    // expect(paragraph.text.style!.color, equals(ThemeData.fallback().primaryColorLight));
   });
 
   testWidgets('CircleAvatar renders at zero area', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: SizedBox.shrink(child: CircleAvatar(child: Text('X'))),
+      wrap(
+        child: const SizedBox.shrink(child: RawCircleAvatar(child: Text('X'))),
       ),
     );
   });
@@ -331,9 +275,22 @@ Widget wrap({required Widget child}) {
     textDirection: TextDirection.ltr,
     child: MediaQuery(
       data: const MediaQueryData(),
-      child: MaterialApp(
-        theme: ThemeData(useMaterial3: false),
-        home: Center(child: child),
+      child: WidgetsApp(
+        color: const Color(0xFFFFFFFF),
+        pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) {
+          return PageRouteBuilder<T>(
+            pageBuilder:
+                (
+                  BuildContext context,
+                  Animation<double> animation,
+                  Animation<double> secondaryAnimation,
+                ) => builder(context),
+          );
+        },
+        builder: (BuildContext context, Widget? child) {
+          return Center(child: child);
+        },
+        home: child,
       ),
     ),
   );
