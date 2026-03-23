@@ -3060,8 +3060,8 @@ class EditableTextState extends State<EditableText>
         ),
       if (toolbarOptions.paste && pasteEnabled)
         ContextMenuButtonItem(
-          onPressed: () {
-            pasteText(SelectionChangedCause.toolbar);
+          onPressed: () async {
+            await pasteText(SelectionChangedCause.toolbar);
           },
           type: ContextMenuButtonType.paste,
         ),
@@ -5256,9 +5256,9 @@ class EditableTextState extends State<EditableText>
                 ? pasteEnabled
                 : pasteEnabled && (widget.selectionControls?.canPaste(this) ?? false)) &&
             (clipboardStatus.value == ClipboardStatus.pasteable)
-        ? () {
-            controls?.handlePaste(this);
-            pasteText(SelectionChangedCause.toolbar);
+        ? () async {
+            await controls?.handlePaste(this);
+            await pasteText(SelectionChangedCause.toolbar);
           }
         : null;
   }

@@ -3304,7 +3304,7 @@ void main() {
 
     // Populate a fake clipboard.
     const clipboardContent = 'Dobunezumi mitai ni utsukushiku naritai';
-    Clipboard.setData(const ClipboardData(text: clipboardContent));
+    await Clipboard.setData(const ClipboardData(text: clipboardContent));
 
     // Long-press to bring up the text editing controls.
     final Finder textFinder = find.byType(EditableText);

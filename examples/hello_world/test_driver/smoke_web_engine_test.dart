@@ -24,9 +24,7 @@ void main() {
     });
 
     // Close the connection to the driver after the tests have completed.
-    tearDownAll(() async {
-      driver.close();
-    });
+    tearDownAll(driver.close);
 
     test('title is correct', () async {
       expect(await driver.getText(titleFinder), 'Hello, world!');
