@@ -806,16 +806,15 @@ class _AndroidViewState extends State<AndroidView> {
       return;
     }
     if (!isFocused) {
-      _controller.clearFocus().catchError((dynamic e) {
-        if (e is MissingPluginException) {
-          // We land the framework part of Android platform views keyboard
-          // support before the engine part. There will be a commit range where
-          // clearFocus isn't implemented in the engine. When that happens we
-          // just swallow the error here. Once the engine part is rolled to the
-          // framework I'll remove this.
-          // TODO(amirh): remove this once the engine's clearFocus is rolled.
-          return;
-        }
+      _controller.clearFocus().catchError((Object error, StackTrace stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'widgets library',
+            context: ErrorDescription('while clearing the platform view focus'),
+          ),
+        );
       });
       return;
     }
@@ -823,16 +822,15 @@ class _AndroidViewState extends State<AndroidView> {
         .invokeMethod<void>('TextInput.setPlatformViewClient', <String, dynamic>{
           'platformViewId': _id,
         })
-        .catchError((dynamic e) {
-          if (e is MissingPluginException) {
-            // We land the framework part of Android platform views keyboard
-            // support before the engine part. There will be a commit range where
-            // setPlatformViewClient isn't implemented in the engine. When that
-            // happens we just swallow the error here. Once the engine part is
-            // rolled to the framework I'll remove this.
-            // TODO(amirh): remove this once the engine's clearFocus is rolled.
-            return;
-          }
+        .catchError((Object error, StackTrace stack) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stack,
+              library: 'widgets library',
+              context: ErrorDescription('while setting the platform view client'),
+            ),
+          );
         });
   }
 }
