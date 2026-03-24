@@ -50,7 +50,9 @@ void main() {
       await _requestDataWithRetry(driver, jsonEncode({'type': 'ping'}));
     });
 
-    tearDownAll(driver.close);
+    tearDownAll(() async {
+      await driver.close();
+    });
 
     test('Can set and get title', () async {
       await _requestDataWithRetry(
