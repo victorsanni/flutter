@@ -195,7 +195,6 @@ abstract class FlutterDriver {
   ///
   ///  * [VMServiceFlutterDriver], which uses vmservice to implement.
   ///  * [WebFlutterDriver], which uses webdriver to implement.
-  @awaitNotRequired
   Future<Map<String, dynamic>> sendCommand(Command command) async => throw UnimplementedError();
 
   /// Checks the status of the Flutter Driver extension.
@@ -807,7 +806,6 @@ abstract class FlutterDriver {
   /// Closes the underlying connection to the VM service.
   ///
   /// Returns a [Future] that fires once the connection has been closed.
-  @awaitNotRequired
   Future<void> close() async {
     throw UnimplementedError();
   }
