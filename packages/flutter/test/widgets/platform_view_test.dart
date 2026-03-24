@@ -1348,7 +1348,9 @@ void main() {
         );
         await tester.pump();
 
-        final Focus focusWidget = tester.widget(find.descendant(of: find.byType(AndroidView), matching: find.byType(Focus)));
+        final Focus focusWidget = tester.widget(
+          find.descendant(of: find.byType(AndroidView), matching: find.byType(Focus)),
+        );
         final FocusNode focusNode = focusWidget.focusNode!;
 
         focusNode.requestFocus();
@@ -1369,14 +1371,22 @@ void main() {
 
         expect(errors, hasLength(1));
         expect(errors.single.exception.toString(), contains('clearFocus failed'));
-        expect(errors.single.context.toString(), contains('while clearing the platform view focus'));
+        expect(
+          errors.single.context.toString(),
+          contains('while clearing the platform view focus'),
+        );
       } finally {
         FlutterError.onError = oldOnError;
-        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform_views, null);
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform_views,
+          null,
+        );
       }
     });
 
-    testWidgets('_onFocusChange reports error when setPlatformViewClient fails', (WidgetTester tester) async {
+    testWidgets('_onFocusChange reports error when setPlatformViewClient fails', (
+      WidgetTester tester,
+    ) async {
       final viewsController = FakeAndroidPlatformViewsController();
       viewsController.registerViewType('webview');
 
@@ -1396,28 +1406,35 @@ void main() {
         );
         await tester.pump();
 
-        final Focus focusWidget = tester.widget(find.descendant(of: find.byType(AndroidView), matching: find.byType(Focus)));
+        final Focus focusWidget = tester.widget(
+          find.descendant(of: find.byType(AndroidView), matching: find.byType(Focus)),
+        );
         final FocusNode focusNode = focusWidget.focusNode!;
 
-        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.textInput,
-          (MethodCall call) async {
-            if (call.method == 'TextInput.setPlatformViewClient') {
-              throw Exception('setPlatformViewClient failed');
-            }
-            return null;
-          },
-        );
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.textInput, (
+          MethodCall call,
+        ) async {
+          if (call.method == 'TextInput.setPlatformViewClient') {
+            throw Exception('setPlatformViewClient failed');
+          }
+          return null;
+        });
 
         focusNode.requestFocus();
         await tester.pumpAndSettle();
 
         expect(errors, hasLength(1));
         expect(errors.single.exception.toString(), contains('setPlatformViewClient failed'));
-        expect(errors.single.context.toString(), contains('while setting the platform view client'));
+        expect(
+          errors.single.context.toString(),
+          contains('while setting the platform view client'),
+        );
       } finally {
         FlutterError.onError = oldOnError;
-        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.textInput, null);
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.textInput,
+          null,
+        );
       }
     });
   });
