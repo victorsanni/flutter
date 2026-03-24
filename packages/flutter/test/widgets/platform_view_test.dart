@@ -1333,7 +1333,7 @@ void main() {
       viewsController.registerViewType('webview');
 
       final errors = <FlutterErrorDetails>[];
-      final oldOnError = FlutterError.onError;
+      final FlutterExceptionHandler? oldOnError = FlutterError.onError;
       FlutterError.onError = (FlutterErrorDetails details) {
         errors.add(details);
       };
@@ -1381,7 +1381,7 @@ void main() {
       viewsController.registerViewType('webview');
 
       final errors = <FlutterErrorDetails>[];
-      final oldOnError = FlutterError.onError;
+      final FlutterExceptionHandler? oldOnError = FlutterError.onError;
       FlutterError.onError = (FlutterErrorDetails details) {
         errors.add(details);
       };
