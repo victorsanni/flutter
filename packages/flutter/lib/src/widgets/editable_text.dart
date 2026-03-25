@@ -3183,7 +3183,9 @@ class EditableTextState extends State<EditableText>
             clipboardStatus: clipboardStatus.value,
             onCopy: copyEnabled ? () => copySelection(SelectionChangedCause.toolbar) : null,
             onCut: cutEnabled ? () => cutSelection(SelectionChangedCause.toolbar) : null,
-            onPaste: pasteEnabled ? () => _pasteTextWithReporting(SelectionChangedCause.toolbar) : null,
+            onPaste: pasteEnabled
+                ? () => _pasteTextWithReporting(SelectionChangedCause.toolbar)
+                : null,
             onSelectAll: selectAllEnabled ? () => selectAll(SelectionChangedCause.toolbar) : null,
             onLookUp: lookUpEnabled ? () => lookUpSelection(SelectionChangedCause.toolbar) : null,
             onSearchWeb: searchWebEnabled

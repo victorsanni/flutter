@@ -2265,7 +2265,9 @@ void main() {
     expect(find.text('Paste'), findsNothing);
   });
 
-  testWidgets('pasteText reports error to FlutterError when Clipboard.getData throws', (WidgetTester tester) async {
+  testWidgets('pasteText reports error to FlutterError when Clipboard.getData throws', (
+    WidgetTester tester,
+  ) async {
     final errors = <FlutterErrorDetails>[];
     final FlutterExceptionHandler? oldOnError = FlutterError.onError;
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -2273,15 +2275,14 @@ void main() {
     };
 
     try {
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (MethodCall methodCall) async {
-          if (methodCall.method == 'Clipboard.getData') {
-            throw PlatformException(code: 'CLIPBOARD_ERROR', message: 'Failed to read clipboard');
-          }
-          return null; // Fall through for other methods
-        },
-      );
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (
+        MethodCall methodCall,
+      ) async {
+        if (methodCall.method == 'Clipboard.getData') {
+          throw PlatformException(code: 'CLIPBOARD_ERROR', message: 'Failed to read clipboard');
+        }
+        return null; // Fall through for other methods
+      });
 
       final controller = TextEditingController(text: 'text');
       controller.selection = const TextSelection.collapsed(offset: 0);
@@ -2303,7 +2304,11 @@ void main() {
       );
 
       // Get a context inside EditableText to access its internal Actions
-      final BuildContext childContext = tester.element(find.descendant(of: find.byType(EditableText), matching: find.byType(RawGestureDetector)).first);
+      final BuildContext childContext = tester.element(
+        find
+            .descendant(of: find.byType(EditableText), matching: find.byType(RawGestureDetector))
+            .first,
+      );
       Actions.invoke(childContext, const PasteTextIntent(SelectionChangedCause.toolbar));
 
       await tester.idle(); // Allow async work to complete (like platform channels)
