@@ -468,6 +468,7 @@ abstract class FlutterDriver {
     var isVisible = false;
     Object? waitForError;
     StackTrace? waitForStack;
+    // ignore: unawaited_futures
     waitFor(item, timeout: timeout).then<void>(
       (_) {
         isVisible = true;

@@ -156,7 +156,7 @@ class NetworkImage extends image_provider.ImageProvider<image_provider.NetworkIm
       });
       rethrow;
     } finally {
-      chunkEvents.close();
+      await chunkEvents.close();
     }
   }
 

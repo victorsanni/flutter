@@ -1501,6 +1501,7 @@ void main() {
               const SnackBar(content: SizedBox(height: 40, width: 300), duration: duration),
             )
             .closed
+            // ignore: unawaited_futures
             .then((SnackBarClosedReason result) => reason = result);
         await tester.pumpFrames(tester.widget(find.byType(MaterialApp)), halfDuration);
 
