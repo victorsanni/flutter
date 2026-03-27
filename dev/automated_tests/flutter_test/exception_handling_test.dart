@@ -15,7 +15,6 @@ void main() {
   testWidgets('Exception handling in test harness - uncaught Future error', (
     WidgetTester tester,
   ) async {
-    // ignore: unawaited_futures
     Future<void>.error('Who lives, who dies, who tells your story?');
   });
 }
