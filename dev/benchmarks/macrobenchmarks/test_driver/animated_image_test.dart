@@ -17,6 +17,7 @@ Future<void> main() async {
     });
     final summary = TimelineSummary.summarize(timeline);
     await summary.writeTimelineToFile(fileName, pretty: true);
+
     await driver.close();
   }, timeout: Timeout.none);
 }

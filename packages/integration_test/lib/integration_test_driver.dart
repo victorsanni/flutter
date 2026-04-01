@@ -70,7 +70,9 @@ Future<void> integrationDriver({
   final FlutterDriver driver = await FlutterDriver.connect();
   final String jsonResult = await driver.requestData(null, timeout: timeout);
   final Response response = Response.fromJson(jsonResult);
+
   await driver.close();
+
   if (response.allTestsPassed) {
     print('All tests passed.');
     if (responseDataCallback != null) {

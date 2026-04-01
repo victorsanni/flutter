@@ -160,7 +160,9 @@ Future<void> integrationDriver({
       throw StateError('The following screenshot tests failed: ${failures.join(', ')}');
     }
   }
+
   await driver.close();
+
   if (response.allTestsPassed) {
     print('All tests passed.');
     if (responseDataCallback != null) {

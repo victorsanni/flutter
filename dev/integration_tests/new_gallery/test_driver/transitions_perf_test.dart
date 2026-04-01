@@ -254,6 +254,7 @@ void main([List<String> args = const <String>[]]) {
 
     tearDownAll(() async {
       await driver.close();
+
       stdout.writeln(
         'Timeline summaries for profiled demos have been output to the build/ directory.',
       );
