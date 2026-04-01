@@ -18,7 +18,11 @@ void main() {
       driver = await FlutterDriver.connect();
     });
 
-    tearDownAll(driver.close);
+    tearDownAll(() async {
+
+      await driver.close();
+
+    });
 
     test('minFrameNumber is numeric', () async {
       final SerializableFinder minFrameNumberFinder = find.byValueKey('minFrameNumber');

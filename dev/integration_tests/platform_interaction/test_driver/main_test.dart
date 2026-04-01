@@ -27,6 +27,10 @@ void main() {
       }
     }, timeout: Timeout.none);
 
-    tearDownAll(driver.close);
+    tearDownAll(() async {
+
+      await driver.close();
+
+    });
   });
 }

@@ -14,7 +14,11 @@ Future<void> main() async {
     driver = await FlutterDriver.connect();
   });
 
-  tearDownAll(driver.close);
+  tearDownAll(() async {
+
+    await driver.close();
+
+  });
 
   test('verified input', () async {
     // Wait for the PlatformView to show up.
