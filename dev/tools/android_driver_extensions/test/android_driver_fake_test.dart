@@ -27,7 +27,6 @@ void main() async {
     final String path = await screenshot.saveAs();
     final file = io.File(path);
     expect(file.readAsBytes(), completion(<int>[1, 2, 3, 4]));
-
     await driver.close();
   });
 

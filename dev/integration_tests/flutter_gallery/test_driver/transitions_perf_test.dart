@@ -186,9 +186,7 @@ void main([List<String> args = const <String>[]]) {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test(

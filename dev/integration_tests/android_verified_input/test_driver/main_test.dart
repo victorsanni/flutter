@@ -15,9 +15,7 @@ Future<void> main() async {
   });
 
   tearDownAll(() async {
-
     await driver.close();
-
   });
 
   test('verified input', () async {

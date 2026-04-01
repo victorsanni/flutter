@@ -15,9 +15,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('sanity check flutter drive --route', () async {

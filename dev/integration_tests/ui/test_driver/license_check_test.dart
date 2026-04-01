@@ -28,9 +28,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('flutter license', () async {

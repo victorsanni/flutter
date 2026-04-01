@@ -15,9 +15,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('empty', () async {}, timeout: Timeout.none);

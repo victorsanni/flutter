@@ -31,7 +31,6 @@ Future<void> runDriverTestForRoute(String routeName, DriverTestCallBack body) as
   await driver.tap(button);
 
   await body(driver);
-
   await driver.close();
 }
 

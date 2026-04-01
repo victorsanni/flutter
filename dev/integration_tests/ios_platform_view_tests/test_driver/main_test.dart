@@ -15,9 +15,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('Merge thread to create and remove platform views should not crash', () async {

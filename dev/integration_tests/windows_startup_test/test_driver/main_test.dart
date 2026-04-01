@@ -11,7 +11,6 @@ void main() {
     final String result = await driver.requestData('verifyWindowVisibility');
 
     expect(result, equals('success'));
-
     await driver.close();
   }, timeout: Timeout.none);
 
@@ -20,7 +19,6 @@ void main() {
     final String result = await driver.requestData('verifyTheme');
 
     expect(result, equals('success'));
-
     await driver.close();
   }, timeout: Timeout.none);
 
@@ -29,7 +27,6 @@ void main() {
     final String result = await driver.requestData('verifyStringConversion');
 
     expect(result, equals('success'));
-
     await driver.close();
   }, timeout: Timeout.none);
 
@@ -38,7 +35,6 @@ void main() {
     final String result = await driver.requestData('verifyNullStringConversion');
 
     expect(result, equals('success'));
-
     await driver.close();
   }, timeout: Timeout.none);
 
@@ -47,7 +43,6 @@ void main() {
     final String result = await driver.requestData('verifyEmptyStringConversion');
 
     expect(result, equals('success'));
-
     await driver.close();
   }, timeout: Timeout.none);
 
@@ -56,7 +51,6 @@ void main() {
     final String result = await driver.requestData('verifyInvalidUtf16Conversion');
 
     expect(result, equals('success'));
-
     await driver.close();
   }, timeout: Timeout.none);
 }

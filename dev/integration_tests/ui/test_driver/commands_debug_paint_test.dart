@@ -13,9 +13,7 @@ void main() {
   });
 
   tearDownAll(() async {
-
     await driver.close();
-
   });
 
   test('check that we are painting in debugPaintSize mode', () async {

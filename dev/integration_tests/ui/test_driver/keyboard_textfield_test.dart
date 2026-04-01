@@ -15,9 +15,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('Textfield scrolls back into view after covered by keyboard', () async {

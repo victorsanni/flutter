@@ -13,9 +13,7 @@ Future<void> main() async {
   });
 
   tearDownAll(() async {
-
     await driver.close();
-
   });
 
   // Run `run_release_test.sh` to also test release engine deferred components code. This

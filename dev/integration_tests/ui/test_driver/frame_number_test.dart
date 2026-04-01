@@ -19,9 +19,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('minFrameNumber is numeric', () async {

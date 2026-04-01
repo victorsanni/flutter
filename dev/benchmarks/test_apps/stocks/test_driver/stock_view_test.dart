@@ -16,9 +16,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('Stock list is shown', () async {

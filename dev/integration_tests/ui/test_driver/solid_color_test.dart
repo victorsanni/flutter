@@ -23,8 +23,6 @@ void main() {
   }, timeout: Timeout.none);
 
   tearDownAll(() async {
-
     await driver.close();
-
   });
 }

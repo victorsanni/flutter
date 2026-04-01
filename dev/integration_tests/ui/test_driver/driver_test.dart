@@ -18,9 +18,7 @@ void main() {
     });
 
     tearDownAll(() async {
-
       await driver.close();
-
     });
 
     test('waitFor should find text "present"', () async {
