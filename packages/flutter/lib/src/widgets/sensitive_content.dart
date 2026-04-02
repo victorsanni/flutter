@@ -372,33 +372,28 @@ class _SensitiveContentState extends State<SensitiveContent> {
   void dispose() {
     SensitiveContentHost.unregister(
       widget.sensitivity,
-    ).catchError(_reportError('while unregistering sensitive content'));
-    super.dispose();
-  }
-
-  void Function(Object, StackTrace) _reportError(String context) {
-    return (Object exception, StackTrace stack) {
+    ).catchError((
+      Object exception,
+      StackTrace stack,
+    ) {
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: exception,
           stack: stack,
           library: 'widgets library',
-          context: ErrorDescription(context),
+          context: ErrorDescription('while unregistering sensitive content'),
         ),
       );
-    };
+    });
+    super.dispose();
   }
 
   Future<void> _reregisterWidget(
     ContentSensitivity oldSensitivity,
     ContentSensitivity newSensitivity,
   ) async {
-    SensitiveContentHost.register(
-      newSensitivity,
-    ).catchError(_reportError('while re-registering sensitive content'));
-    SensitiveContentHost.unregister(
-      oldSensitivity,
-    ).catchError(_reportError('while un-registering sensitive content'));
+    await SensitiveContentHost.register(newSensitivity);
+    await SensitiveContentHost.unregister(oldSensitivity);
   }
 
   @override
