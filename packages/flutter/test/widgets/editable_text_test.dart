@@ -5522,7 +5522,9 @@ void main() {
     });
   });
 
-  testWidgets('reporting error when Clipboard.setData fails in copySelection', (WidgetTester tester) async {
+  testWidgets('reporting error when Clipboard.setData fails in copySelection', (
+    WidgetTester tester,
+  ) async {
     final errors = <FlutterErrorDetails>[];
     final FlutterExceptionHandler? originalOnError = FlutterError.onError;
     FlutterError.onError = (FlutterErrorDetails details) {

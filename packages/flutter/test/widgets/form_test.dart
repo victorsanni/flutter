@@ -455,7 +455,9 @@ void main() {
     ]);
   });
 
-  testWidgets('Form reports error when SemanticsService.sendAnnouncement fails during validation', (WidgetTester tester) async {
+  testWidgets('Form reports error when SemanticsService.sendAnnouncement fails during validation', (
+    WidgetTester tester,
+  ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
     try {
       final formKey = GlobalKey<FormState>();
@@ -523,9 +525,10 @@ void main() {
       await tester.pump();
 
       expect(errors, isNotEmpty);
-      final bool hasAnnouncementError = errors.any((e) => 
-        e.exception.toString().contains('FormatException') && 
-        e.context.toString().contains('while sending semantics announcement')
+      final bool hasAnnouncementError = errors.any(
+        (e) =>
+            e.exception.toString().contains('FormatException') &&
+            e.context.toString().contains('while sending semantics announcement'),
       );
       expect(hasAnnouncementError, isTrue);
     } finally {

@@ -370,7 +370,9 @@ class _SensitiveContentState extends State<SensitiveContent> {
 
   @override
   void dispose() {
-    SensitiveContentHost.unregister(widget.sensitivity).catchError(_reportError('while unregistering sensitive content'));
+    SensitiveContentHost.unregister(
+      widget.sensitivity,
+    ).catchError(_reportError('while unregistering sensitive content'));
     super.dispose();
   }
 
@@ -391,8 +393,12 @@ class _SensitiveContentState extends State<SensitiveContent> {
     ContentSensitivity oldSensitivity,
     ContentSensitivity newSensitivity,
   ) async {
-    SensitiveContentHost.register(newSensitivity).catchError(_reportError('while re-registering sensitive content'));
-    SensitiveContentHost.unregister(oldSensitivity).catchError(_reportError('while un-registering sensitive content'));
+    SensitiveContentHost.register(
+      newSensitivity,
+    ).catchError(_reportError('while re-registering sensitive content'));
+    SensitiveContentHost.unregister(
+      oldSensitivity,
+    ).catchError(_reportError('while un-registering sensitive content'));
   }
 
   @override

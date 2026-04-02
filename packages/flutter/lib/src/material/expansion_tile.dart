@@ -557,7 +557,10 @@ class _ExpansionTileState extends State<ExpansionTile> {
       // semantic announcements on iOS. https://github.com/flutter/flutter/issues/122101.
       _timer?.cancel();
       _timer = Timer(const Duration(seconds: 1), () {
-        SemanticsService.sendAnnouncement(View.of(context), stateHint, textDirection).catchError((Object exception, StackTrace stack) {
+        SemanticsService.sendAnnouncement(View.of(context), stateHint, textDirection).catchError((
+          Object exception,
+          StackTrace stack,
+        ) {
           FlutterError.reportError(
             FlutterErrorDetails(
               exception: exception,
@@ -574,7 +577,10 @@ class _ExpansionTileState extends State<ExpansionTile> {
     // SemanticsService.sendAnnouncement is deprecated on android.
     // We use live region to achieve the announcement effect instead.
     else if (defaultTargetPlatform != TargetPlatform.android) {
-      SemanticsService.sendAnnouncement(View.of(context), stateHint, textDirection).catchError((Object exception, StackTrace stack) {
+      SemanticsService.sendAnnouncement(View.of(context), stateHint, textDirection).catchError((
+        Object exception,
+        StackTrace stack,
+      ) {
         FlutterError.reportError(
           FlutterErrorDetails(
             exception: exception,

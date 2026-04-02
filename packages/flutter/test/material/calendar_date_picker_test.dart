@@ -1778,9 +1778,10 @@ void main() {
         await tester.pump();
 
         expect(errors, isNotEmpty);
-        final bool hasAnnouncementError = errors.any((e) => 
-          e.exception.toString().contains('FormatException') && 
-          e.context.toString().contains('while sending semantics announcement')
+        final bool hasAnnouncementError = errors.any(
+          (e) =>
+              e.exception.toString().contains('FormatException') &&
+              e.context.toString().contains('while sending semantics announcement'),
         );
         expect(hasAnnouncementError, isTrue);
       },

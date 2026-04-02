@@ -450,7 +450,11 @@ class _RawAutocompleteState<T extends Object> extends State<RawAutocomplete<T>> 
     final String optionsHint = resultsAvailable
         ? localizations.searchResultsFound
         : localizations.noResultsFound;
-    SemanticsService.sendAnnouncement(View.of(context), optionsHint, localizations.textDirection).catchError((Object exception, StackTrace stack) {
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      optionsHint,
+      localizations.textDirection,
+    ).catchError((Object exception, StackTrace stack) {
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: exception,

@@ -676,6 +676,22 @@ void main() {
   testWidgets('popRoute not handled by observer returns false', (WidgetTester tester) async {
     final ByteData message = const JSONMethodCodec().encodeMethodCall(const MethodCall('popRoute'));
 
+    TestWidgetsFlutterBinding.ensureInitialized().defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (MethodCall methodCall) async {
+        if (methodCall.method == 'SystemNavigator.pop') {
+          return null; // Success
+        }
+        return null;
+      },
+    );
+    addTearDown(() {
+      TestWidgetsFlutterBinding.ensureInitialized().defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      );
+    });
+
     final ByteData result = (await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
       'flutter/navigation',
       message,
@@ -685,6 +701,7 @@ void main() {
 
     expect(decodedResult, false);
   });
+
   testWidgets('Application lifecycle affects frame scheduling', (WidgetTester tester) async {
     expect(tester.binding.hasScheduledFrame, isFalse);
 
@@ -869,7 +886,9 @@ void main() {
       expect(errors, hasLength(1));
     });
 
-    testWidgets('handlePopRoute reports error when SystemNavigator.pop fails', (WidgetTester tester) async {
+    testWidgets('handlePopRoute reports error when SystemNavigator.pop fails', (
+      WidgetTester tester,
+    ) async {
       final errors = <FlutterErrorDetails>[];
       final FlutterExceptionHandler? originalOnError = FlutterError.onError;
       FlutterError.onError = (FlutterErrorDetails details) {

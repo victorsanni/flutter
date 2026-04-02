@@ -244,7 +244,11 @@ class _CalendarDatePickerState extends State<CalendarDatePicker> {
   // Auxiliary method for handling the difference between platforms
   void _announce(String message) {
     if (MediaQuery.maybeSupportsAnnounceOf(context) ?? false) {
-      SemanticsService.sendAnnouncement(View.of(context), message, Directionality.of(context)).catchError(_reportAnnouncementError);
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        message,
+        Directionality.of(context),
+      ).catchError(_reportAnnouncementError);
     } else {
       // If SemanticsService.sendAnnouncement is not supported,
       // we use live region to achieve the announcement effect instead.
@@ -675,7 +679,11 @@ class _MonthPickerState extends State<_MonthPicker> {
   // Auxiliary method for handling the difference between platforms
   void _announce(String message) {
     if (MediaQuery.maybeSupportsAnnounceOf(context) ?? false) {
-      SemanticsService.sendAnnouncement(View.of(context), message, Directionality.of(context)).catchError(_reportAnnouncementError);
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        message,
+        Directionality.of(context),
+      ).catchError(_reportAnnouncementError);
     } else {
       // If SemanticsService.sendAnnouncement is not supported,
       // we use live region to achieve the announcement effect instead.

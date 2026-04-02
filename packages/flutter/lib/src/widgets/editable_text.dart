@@ -2764,7 +2764,9 @@ class EditableTextState extends State<EditableText>
       return;
     }
     final String text = textEditingValue.text;
-    Clipboard.setData(ClipboardData(text: selection.textInside(text))).catchError(_reportClipboardError('while copying selection to clipboard'));
+    Clipboard.setData(
+      ClipboardData(text: selection.textInside(text)),
+    ).catchError(_reportClipboardError('while copying selection to clipboard'));
     if (cause == SelectionChangedCause.toolbar) {
       bringIntoView(textEditingValue.selection.extent);
       hideToolbar(false);
@@ -2801,7 +2803,9 @@ class EditableTextState extends State<EditableText>
     if (selection.isCollapsed) {
       return;
     }
-    Clipboard.setData(ClipboardData(text: selection.textInside(text))).catchError(_reportClipboardError('while cutting selection to clipboard'));
+    Clipboard.setData(
+      ClipboardData(text: selection.textInside(text)),
+    ).catchError(_reportClipboardError('while cutting selection to clipboard'));
     _replaceText(ReplaceTextIntent(textEditingValue, '', selection, cause));
     if (cause == SelectionChangedCause.toolbar) {
       // Schedule a call to bringIntoView() after renderEditable updates.
