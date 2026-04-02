@@ -3486,7 +3486,7 @@ void main() {
         },
       );
 
-      final OverlayEntry entry = OverlayEntry(
+      final entry = OverlayEntry(
         builder: (BuildContext context) {
           return RawAutocomplete<String>(
             optionsBuilder: (TextEditingValue textEditingValue) {
