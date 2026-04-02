@@ -174,7 +174,6 @@ class ScrollPositionWithSingleContext extends ScrollPosition implements ScrollAc
   }
 
   @override
-  @awaitNotRequired
   Future<void> animateTo(double to, {required Duration duration, required Curve curve}) {
     if (nearEqual(to, pixels, physics.toleranceFor(this).distance)) {
       // Skip the animation, go straight to the position as we are already close.
