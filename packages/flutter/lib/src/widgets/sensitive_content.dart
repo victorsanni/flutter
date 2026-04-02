@@ -370,9 +370,7 @@ class _SensitiveContentState extends State<SensitiveContent> {
 
   @override
   void dispose() {
-    SensitiveContentHost.unregister(
-      widget.sensitivity,
-    ).catchError((
+    SensitiveContentHost.unregister(widget.sensitivity).catchError((
       Object exception,
       StackTrace stack,
     ) {
