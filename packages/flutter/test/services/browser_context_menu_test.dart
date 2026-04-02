@@ -22,7 +22,7 @@ void main() {
     () {
       test('disableContextMenu asserts', () async {
         try {
-          BrowserContextMenu.disableContextMenu();
+          await BrowserContextMenu.disableContextMenu();
         } catch (error) {
           expect(error, isAssertionError);
         }
