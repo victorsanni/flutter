@@ -1108,7 +1108,6 @@ mixin WidgetsBinding
   /// Developers can manually set this by calling the method directly or by
   /// using [NavigationNotification].
   /// {@endtemplate}
-  @awaitNotRequired
   @protected
   @visibleForTesting
   Future<bool> handlePopRoute() async {
@@ -1242,7 +1241,6 @@ mixin WidgetsBinding
   ///
   /// This method exposes the `pushRoute` notification from
   /// [SystemChannels.navigation].
-  @awaitNotRequired
   @protected
   @mustCallSuper
   @visibleForTesting

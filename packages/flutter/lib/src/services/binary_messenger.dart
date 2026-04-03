@@ -57,7 +57,6 @@ abstract class BinaryMessenger {
     'or TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage. '
     'This feature was deprecated after v3.9.0-19.0.pre.',
   )
-  @awaitNotRequired
   Future<void> handlePlatformMessage(
     String channel,
     ByteData? data,
