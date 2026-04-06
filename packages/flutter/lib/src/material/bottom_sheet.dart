@@ -384,6 +384,7 @@ class _BottomSheetState extends State<BottomSheet> {
       }
     }
 
+    final double bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     Widget bottomSheet = Material(
       key: _childKey,
       color: color,
@@ -392,20 +393,28 @@ class _BottomSheetState extends State<BottomSheet> {
       shadowColor: shadowColor,
       shape: shape,
       clipBehavior: clipBehavior,
-      child: NotificationListener<DraggableScrollableNotification>(
-        onNotification: extentChanged,
-        child: !showDragHandle
-            ? widget.builder(context)
-            : Stack(
-                alignment: Alignment.topCenter,
-                children: <Widget>[
-                  dragHandle!,
-                  Padding(
-                    padding: const EdgeInsets.only(top: kMinInteractiveDimension),
-                    child: widget.builder(context),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            viewInsets: MediaQuery.of(context).viewInsets.copyWith(bottom: 0),
+          ),
+          child: NotificationListener<DraggableScrollableNotification>(
+            onNotification: extentChanged,
+            child: !showDragHandle
+                ? widget.builder(context)
+                : Stack(
+                    alignment: Alignment.topCenter,
+                    children: <Widget>[
+                      dragHandle!,
+                      Padding(
+                        padding: const EdgeInsets.only(top: kMinInteractiveDimension),
+                        child: widget.builder(context),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+          ),
+        ),
       ),
     );
 

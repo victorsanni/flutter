@@ -3260,6 +3260,139 @@ void main() {
     // animation continues from the current visual offset.
     expect(yAfterUp, closeTo(yBeforeUp, 0.1));
   });
+
+  testWidgets('ModalBottomSheet automatically handles viewInsets and extends background', (WidgetTester tester) async {
+    final viewInsets = ValueNotifier<EdgeInsets>(EdgeInsets.zero);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (BuildContext context, Widget? child) {
+          return ValueListenableBuilder<EdgeInsets>(
+            valueListenable: viewInsets,
+            builder: (BuildContext context, EdgeInsets insets, Widget? child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(viewInsets: insets),
+                child: child!,
+              );
+            },
+            child: child,
+          );
+        },
+        home: Scaffold(
+          body: Builder(
+            builder: (BuildContext context) {
+              return Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                      builder: (BuildContext context) {
+                        return const SizedBox(
+                          height: 200,
+                          child: Center(child: Text('Content')),
+                        );
+                      },
+                    );
+                  },
+                  child: const Text('Show'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Show'));
+    await tester.pumpAndSettle();
+
+    // The BottomSheet (Material) should be at the bottom (600). Top at 400.
+    Finder bottomSheetFinder = find.byType(BottomSheet);
+    Rect bottomSheetRect = tester.getRect(bottomSheetFinder);
+    expect(bottomSheetRect.bottom, 600.0);
+    expect(bottomSheetRect.top, 400.0);
+
+    // Update insets (simulate keyboard)
+    viewInsets.value = const EdgeInsets.only(bottom: 300);
+    await tester.pumpAndSettle();
+
+    // Now the BottomSheet should be taller: 200 content + 300 padding = 500.
+    // Positioned at bottom (600). So top at 100.
+    bottomSheetFinder = find.byType(BottomSheet);
+    bottomSheetRect = tester.getRect(bottomSheetFinder);
+    expect(bottomSheetRect.bottom, 600.0);
+    expect(bottomSheetRect.top, 100.0);
+
+    // The content (Text) should be at the TOP of the visible area.
+    // Visible area is from 100 to 300 (since 300 to 600 is keyboard).
+    final Finder contentFinder = find.text('Content');
+    final Rect contentRect = tester.getRect(contentFinder);
+    expect(contentRect.center.dy, 200.0); // Center of 100-300 is 200.
+  });
+
+  testWidgets('Scaffold persistent bottomSheet automatically handles viewInsets and extends background', (WidgetTester tester) async {
+    final viewInsets = ValueNotifier<EdgeInsets>(EdgeInsets.zero);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (BuildContext context, Widget? child) {
+          return ValueListenableBuilder<EdgeInsets>(
+            valueListenable: viewInsets,
+            builder: (BuildContext context, EdgeInsets insets, Widget? child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(viewInsets: insets),
+                child: child!,
+              );
+            },
+            child: child,
+          );
+        },
+        home: Scaffold(
+          key: scaffoldKey,
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () {
+                scaffoldKey.currentState!.showBottomSheet(
+                  (BuildContext context) {
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(child: Text('Content')),
+                    );
+                  },
+                  backgroundColor: Colors.white,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                );
+              },
+              child: const Text('Show'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Show'));
+    await tester.pumpAndSettle();
+
+    // The BottomSheet (Material) should be at the bottom (600). Top at 400.
+    Finder bottomSheetFinder = find.byType(BottomSheet);
+    Rect bottomSheetRect = tester.getRect(bottomSheetFinder);
+    expect(bottomSheetRect.bottom, 600.0);
+    expect(bottomSheetRect.top, 400.0);
+
+    // Update insets (simulate keyboard)
+    viewInsets.value = const EdgeInsets.only(bottom: 300);
+    await tester.pumpAndSettle();
+
+    bottomSheetFinder = find.byType(BottomSheet);
+    bottomSheetRect = tester.getRect(bottomSheetFinder);
+
+    // The BottomSheet should be at the bottom (600).
+    expect(bottomSheetRect.bottom, 600.0);
+  });
 }
 
 class _TestPage extends StatelessWidget {

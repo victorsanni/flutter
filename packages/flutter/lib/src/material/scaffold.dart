@@ -1146,12 +1146,12 @@ class _ScaffoldLayout extends MultiChildLayoutDelegate {
     if (hasChild(_ScaffoldSlot.bottomSheet)) {
       final bottomSheetConstraints = BoxConstraints(
         maxWidth: fullWidthConstraints.maxWidth,
-        maxHeight: math.max(0.0, contentBottom - contentTop),
+        maxHeight: math.max(0.0, size.height - contentTop),
       );
       bottomSheetSize = layoutChild(_ScaffoldSlot.bottomSheet, bottomSheetConstraints);
       positionChild(
         _ScaffoldSlot.bottomSheet,
-        Offset((size.width - bottomSheetSize.width) / 2.0, contentBottom - bottomSheetSize.height),
+        Offset((size.width - bottomSheetSize.width) / 2.0, contentBottom - bottomSheetSize.height + minInsets.bottom),
       );
     }
 
@@ -3412,33 +3412,41 @@ class _StandardBottomSheetState extends State<_StandardBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.animationController,
-      builder: (BuildContext context, Widget? child) {
-        return Align(
-          alignment: AlignmentDirectional.topStart,
-          heightFactor: animationCurve.transform(widget.animationController.value),
-          child: child,
-        );
-      },
-      child: Semantics(
-        container: true,
-        onDismiss: !widget.isPersistent ? close : null,
-        child: NotificationListener<DraggableScrollableNotification>(
-          onNotification: extentChanged,
-          child: BottomSheet(
-            animationController: widget.animationController,
-            enableDrag: widget.enableDrag,
-            showDragHandle: widget.showDragHandle,
-            onDragStart: _handleDragStart,
-            onDragEnd: _handleDragEnd,
-            onClosing: widget.onClosing!,
-            builder: widget.builder,
-            backgroundColor: widget.backgroundColor,
-            elevation: widget.elevation,
-            shape: widget.shape,
-            clipBehavior: widget.clipBehavior,
-            constraints: widget.constraints,
+    final ScaffoldState scaffold = Scaffold.of(context);
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        viewInsets: MediaQuery.of(context).viewInsets.copyWith(
+          bottom: scaffold._resizeToAvoidBottomInset ? MediaQuery.viewInsetsOf(context).bottom : 0.0,
+        ),
+      ),
+      child: AnimatedBuilder(
+        animation: widget.animationController,
+        builder: (BuildContext context, Widget? child) {
+          return Align(
+            alignment: AlignmentDirectional.topStart,
+            heightFactor: animationCurve.transform(widget.animationController.value),
+            child: child,
+          );
+        },
+        child: Semantics(
+          container: true,
+          onDismiss: !widget.isPersistent ? close : null,
+          child: NotificationListener<DraggableScrollableNotification>(
+            onNotification: extentChanged,
+            child: BottomSheet(
+              animationController: widget.animationController,
+              enableDrag: widget.enableDrag,
+              showDragHandle: widget.showDragHandle,
+              onDragStart: _handleDragStart,
+              onDragEnd: _handleDragEnd,
+              onClosing: widget.onClosing!,
+              builder: widget.builder,
+              backgroundColor: widget.backgroundColor,
+              elevation: widget.elevation,
+              shape: widget.shape,
+              clipBehavior: widget.clipBehavior,
+              constraints: widget.constraints,
+            ),
           ),
         ),
       ),
