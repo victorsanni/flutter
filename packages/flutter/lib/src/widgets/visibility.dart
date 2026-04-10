@@ -9,8 +9,8 @@
 /// @docImport 'transitions.dart';
 library;
 
+import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/rendering.dart';
-import 'package:meta/meta.dart' show internal;
 
 import 'basic.dart';
 import 'focus_scope.dart';

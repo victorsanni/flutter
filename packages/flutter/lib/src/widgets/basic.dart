@@ -4884,17 +4884,17 @@ class IndexedStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Each child is wrapped with [VisibilityScope] (so [Visibility.of] reports
+    // Each child is wrapped with VisibilityScope (so Visibility.of reports
     // the child as hidden when it is not the selected index) and with
-    // [ExcludeFocus] (so non-selected children cannot receive focus). Both of
-    // these do not introduce any [RenderObject]s between the child and the
-    // enclosing [RenderIndexedStack].
+    // ExcludeFocus (so non-selected children cannot receive focus). Both of
+    // these do not introduce any RenderObjects between the child and the
+    // enclosing RenderIndexedStack.
     //
-    // This allows [ParentDataWidget]s such as [Positioned] to correctly apply
-    // their [StackParentData] to the [IndexedStack]'s render object.
+    // This allows ParentDataWidgets such as Positioned to correctly apply
+    // their StackParentData to the IndexedStack's render object.
     //
     // Painting, hit-testing, and semantics for non-selected children are
-    // already handled by [RenderIndexedStack], so no additional render-object
+    // already handled by RenderIndexedStack, so no additional render-object
     // wrappers are needed.
     final wrappedChildren = List<Widget>.generate(children.length, (int i) {
       final isSelected = i == index;
