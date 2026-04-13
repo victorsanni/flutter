@@ -15516,6 +15516,7 @@ void main() {
       final focusNode = FocusNode();
       addTearDown(controller.dispose);
       addTearDown(focusNode.dispose);
+      addTearDown(ContextMenuController.removeAny);
 
       late StateSetter setState;
       final GlobalKey keyOne = GlobalKey();

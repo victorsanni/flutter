@@ -268,19 +268,11 @@ void main() {
 
   testWidgets('ContextMenuController.show updates in-place', (WidgetTester tester) async {
     final controller = ContextMenuController();
+    addTearDown(ContextMenuController.removeAny);
 
     await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: Overlay(
-          initialEntries: <OverlayEntry>[
-            OverlayEntry(
-              builder: (BuildContext context) {
-                return Container();
-              },
-            ),
-          ],
-        ),
+      TestWidgetsApp(
+        home: Container(),
       ),
     );
 
