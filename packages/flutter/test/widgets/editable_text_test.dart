@@ -15519,8 +15519,17 @@ void main() {
     late StateSetter setState;
     final GlobalKey keyOne = GlobalKey();
     final GlobalKey keyTwo = GlobalKey();
-    var key = keyOne;
     final controls = TestTextSelectionHandleControls();
+
+    final builderOne = (BuildContext context, EditableTextState editableTextState) {
+      return SizedBox(key: keyOne, width: 10.0, height: 10.0);
+    };
+
+    final builderTwo = (BuildContext context, EditableTextState editableTextState) {
+      return SizedBox(key: keyTwo, width: 10.0, height: 10.0);
+    };
+
+    var currentBuilder = builderOne;
 
     await tester.pumpWidget(
       TestWidgetsApp(
@@ -15538,9 +15547,7 @@ void main() {
                   cursorColor: const Color(0xff0000ff),
                   backgroundCursorColor: const Color(0xff00ffff),
                   selectionControls: controls,
-                  contextMenuBuilder: (BuildContext context, EditableTextState editableTextState) {
-                    return SizedBox(key: key, width: 10.0, height: 10.0);
-                  },
+                  contextMenuBuilder: currentBuilder,
                 );
               },
             ),
@@ -15561,7 +15568,7 @@ void main() {
     expect(find.byKey(keyTwo), findsNothing);
 
     setState(() {
-      key = keyTwo;
+      currentBuilder = builderTwo;
     });
     await tester.pumpAndSettle();
 
