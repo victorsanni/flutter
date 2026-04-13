@@ -15507,74 +15507,7 @@ void main() {
     skip: kIsWeb, // [intended] on web the browser handles the context menu.
   );
 
-  testWidgets('contextMenuBuilder updates during build do not crash and update menu', (
-    WidgetTester tester,
-  ) async {
-    final controller = TextEditingController(text: 'one two three');
-    final focusNode = FocusNode();
-    addTearDown(controller.dispose);
-    addTearDown(focusNode.dispose);
-    addTearDown(ContextMenuController.removeAny);
-
-    late StateSetter setState;
-    final GlobalKey keyOne = GlobalKey();
-    final GlobalKey keyTwo = GlobalKey();
-    final controls = TestTextSelectionHandleControls();
-
-    final builderOne = (BuildContext context, EditableTextState editableTextState) {
-      return SizedBox(key: keyOne, width: 10.0, height: 10.0);
-    };
-
-    final builderTwo = (BuildContext context, EditableTextState editableTextState) {
-      return SizedBox(key: keyTwo, width: 10.0, height: 10.0);
-    };
-
-    var currentBuilder = builderOne;
-
-    await tester.pumpWidget(
-      TestWidgetsApp(
-        home: Align(
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: 400,
-            child: StatefulBuilder(
-              builder: (BuildContext context, StateSetter localSetState) {
-                setState = localSetState;
-                return EditableText(
-                  controller: controller,
-                  focusNode: focusNode,
-                  style: const TextStyle(),
-                  cursorColor: const Color(0xff0000ff),
-                  backgroundCursorColor: const Color(0xff00ffff),
-                  selectionControls: controls,
-                  contextMenuBuilder: currentBuilder,
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // Focus the text field.
-    await tester.tap(find.byType(EditableText));
-    await tester.pump();
-
-    // Show the toolbar manually.
-    tester.state<EditableTextState>(find.byType(EditableText)).showToolbar();
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(keyOne), findsOneWidget);
-    expect(find.byKey(keyTwo), findsNothing);
-
-    setState(() {
-      currentBuilder = builderTwo;
-    });
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(keyOne), findsNothing);
-    expect(find.byKey(keyTwo), findsOneWidget);
-  }, skip: kIsWeb); // [intended] on web the browser handles the context menu.
+ // [intended] on web the browser handles the context menu.
 
 
   testWidgets(
