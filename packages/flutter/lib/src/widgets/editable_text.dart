@@ -3408,9 +3408,31 @@ class EditableTextState extends State<EditableText>
       _updateRemoteEditingValueIfNeeded();
     }
 
+    // Update the context menu builder in place if the menu is already visible.
+    // This avoids disposing and recreating the overlay, which causes crashes
+    // when rebuilds happen during the build phase (e.g. with inline lambdas).
+    if (_selectionOverlay != null && widget.contextMenuBuilder != oldWidget.contextMenuBuilder) {
+      _selectionOverlay!.contextMenuBuilder =
+          widget.contextMenuBuilder == null || _webContextMenuEnabled
+          ? null
+          : (BuildContext context) {
+              return widget.contextMenuBuilder!(context, this);
+            };
+      if (_selectionOverlay!.toolbarIsVisible) {
+        // We use addPostFrameCallback to avoid calling markNeedsBuild() during
+        // the build phase. This delays the update to the next frame, which could
+        // theoretically cause a 1-frame lag if the content changes drastically.
+        // However, for text selection menus, this is negligible.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _selectionOverlay!.showToolbar();
+          }
+        });
+      }
+    }
+
     if (_selectionOverlay != null &&
-        (widget.contextMenuBuilder != oldWidget.contextMenuBuilder ||
-            widget.selectionControls != oldWidget.selectionControls ||
+        (widget.selectionControls != oldWidget.selectionControls ||
             widget.onSelectionHandleTapped != oldWidget.onSelectionHandleTapped ||
             widget.dragStartBehavior != oldWidget.dragStartBehavior ||
             widget.magnifierConfiguration != oldWidget.magnifierConfiguration)) {

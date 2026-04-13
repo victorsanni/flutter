@@ -15508,6 +15508,73 @@ void main() {
   );
 
   testWidgets(
+    'contextMenuBuilder updates during build do not crash and update menu',
+    (WidgetTester tester) async {
+      // Regression test for https://github.com/flutter/flutter/issues/155514
+
+      final controller = TextEditingController(text: 'one two three');
+      final focusNode = FocusNode();
+      addTearDown(controller.dispose);
+      addTearDown(focusNode.dispose);
+
+      late StateSetter setState;
+      final GlobalKey keyOne = GlobalKey();
+      final GlobalKey keyTwo = GlobalKey();
+      var key = keyOne;
+
+      await tester.pumpWidget(
+        TestWidgetsApp(
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 400,
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter localSetState) {
+                  setState = localSetState;
+                  return EditableText(
+                    controller: controller,
+                    focusNode: focusNode,
+                    style: const TextStyle(),
+                    cursorColor: const Color(0xff0000ff),
+                    backgroundCursorColor: const Color(0xff00ffff),
+                    selectionControls: materialTextSelectionHandleControls,
+                    contextMenuBuilder:
+                        (BuildContext context, EditableTextState editableTextState) {
+                          return SizedBox(key: key, width: 10.0, height: 10.0);
+                        },
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Focus the text field.
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+
+      // Show the toolbar manually.
+      tester.state<EditableTextState>(find.byType(EditableText)).showToolbar();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(keyOne), findsOneWidget);
+      expect(find.byKey(keyTwo), findsNothing);
+
+      // Update the builder and rebuild.
+      setState(() {
+        key = keyTwo;
+      });
+      await tester.pumpAndSettle();
+
+      // Verify that it didn't crash and the menu is updated.
+      expect(find.byKey(keyOne), findsNothing);
+      expect(find.byKey(keyTwo), findsOneWidget);
+    },
+    skip: kIsWeb, // [intended] on web the browser handles the context menu.
+  );
+
+  testWidgets(
     'selectionControls can be updated',
     (WidgetTester tester) async {
       // Regression test for https://github.com/flutter/flutter/issues/142077.

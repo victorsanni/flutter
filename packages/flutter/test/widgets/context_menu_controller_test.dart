@@ -265,4 +265,52 @@ void main() {
     // [intended] no Flutter-drawn text selection toolbar on web.
     skip: isContextMenuProvidedByPlatform,
   );
+
+  testWidgets('ContextMenuController.show updates in-place', (WidgetTester tester) async {
+    final controller = ContextMenuController();
+    final GlobalKey keyOne = GlobalKey();
+    final GlobalKey keyTwo = GlobalKey();
+
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Overlay(
+          initialEntries: <OverlayEntry>[
+            OverlayEntry(
+              builder: (BuildContext context) {
+                return Container();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final BuildContext context = tester.element(find.byType(Container));
+
+    controller.show(
+      context: context,
+      contextMenuBuilder: (BuildContext context) {
+        return SizedBox(key: keyOne, width: 10, height: 10);
+      },
+    );
+    await tester.pump();
+
+    expect(find.byKey(keyOne), findsOneWidget);
+    expect(find.byKey(keyTwo), findsNothing);
+
+    controller.show(
+      context: context,
+      contextMenuBuilder: (BuildContext context) {
+        return SizedBox(key: keyTwo, width: 20, height: 20);
+      },
+    );
+    await tester.pump();
+
+    expect(find.byKey(keyOne), findsNothing);
+    expect(find.byKey(keyTwo), findsOneWidget);
+
+    controller.remove();
+    await tester.pump();
+  });
 }

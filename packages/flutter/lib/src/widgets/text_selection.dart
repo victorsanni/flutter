@@ -408,7 +408,7 @@ class TextSelectionOverlay {
   /// {@macro flutter.widgets.EditableText.contextMenuBuilder}
   ///
   /// If not provided, no context menu will be built.
-  final WidgetBuilder? contextMenuBuilder;
+  WidgetBuilder? contextMenuBuilder;
 
   /// Retrieve current value.
   @visibleForTesting
