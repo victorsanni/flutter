@@ -77,7 +77,8 @@ class ContextMenuController {
 
     _menuOverlayEntry = OverlayEntry(
       builder: (BuildContext context) {
-        return _shownInstance!._capturedThemes!.wrap(_shownInstance!._contextMenuBuilder!(context));
+        final ContextMenuController instance = _shownInstance!;
+        return instance._capturedThemes!.wrap(instance._contextMenuBuilder!(context));
       },
     );
     _shownInstance = this;
@@ -99,6 +100,8 @@ class ContextMenuController {
     _menuOverlayEntry?.dispose();
     _menuOverlayEntry = null;
     if (_shownInstance != null) {
+      _shownInstance!._contextMenuBuilder = null;
+      _shownInstance!._capturedThemes = null;
       _shownInstance!.onRemove?.call();
       _shownInstance = null;
     }

@@ -3419,15 +3419,7 @@ class EditableTextState extends State<EditableText>
               return widget.contextMenuBuilder!(context, this);
             };
       if (_selectionOverlay!.toolbarIsVisible) {
-        // We use addPostFrameCallback to avoid calling markNeedsBuild() during
-        // the build phase. This delays the update to the next frame, which could
-        // theoretically cause a 1-frame lag if the content changes drastically.
-        // However, for text selection menus, this is negligible.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _selectionOverlay!.showToolbar();
-          }
-        });
+        _selectionOverlay!.showToolbar();
       }
     }
 
