@@ -15507,9 +15507,6 @@ void main() {
     skip: kIsWeb, // [intended] on web the browser handles the context menu.
   );
 
- // [intended] on web the browser handles the context menu.
-
-
   testWidgets(
     'selectionControls can be updated',
     (WidgetTester tester) async {
