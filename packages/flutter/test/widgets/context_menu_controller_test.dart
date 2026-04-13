@@ -268,8 +268,6 @@ void main() {
 
   testWidgets('ContextMenuController.show updates in-place', (WidgetTester tester) async {
     final controller = ContextMenuController();
-    final GlobalKey keyOne = GlobalKey();
-    final GlobalKey keyTwo = GlobalKey();
 
     await tester.pumpWidget(
       Directionality(
@@ -288,29 +286,55 @@ void main() {
 
     final BuildContext context = tester.element(find.byType(Container));
 
+    // Show the menu with value 1.
     controller.show(
       context: context,
       contextMenuBuilder: (BuildContext context) {
-        return SizedBox(key: keyOne, width: 10, height: 10);
+        return const StatefulMenu(value: 1);
       },
     );
     await tester.pump();
 
-    expect(find.byKey(keyOne), findsOneWidget);
-    expect(find.byKey(keyTwo), findsNothing);
+    expect(find.text('Initial: 1, Current: 1'), findsOneWidget);
 
+    // Show the menu again with value 2.
     controller.show(
       context: context,
       contextMenuBuilder: (BuildContext context) {
-        return SizedBox(key: keyTwo, width: 20, height: 20);
+        return const StatefulMenu(value: 2);
       },
     );
     await tester.pump();
 
-    expect(find.byKey(keyOne), findsNothing);
-    expect(find.byKey(keyTwo), findsOneWidget);
+    // If it updates in-place, the state is preserved, so initialValue is still 1.
+    // If it recreates the entry, the state is lost, so initialValue becomes 2.
+    expect(find.text('Initial: 1, Current: 2'), findsOneWidget);
 
     controller.remove();
     await tester.pump();
   });
+}
+
+class StatefulMenu extends StatefulWidget {
+  const StatefulMenu({super.key, required this.value});
+  final int value;
+  @override
+  State<StatefulMenu> createState() => StatefulMenuState();
+}
+
+class StatefulMenuState extends State<StatefulMenu> {
+  late int initialValue;
+  @override
+  void initState() {
+    super.initState();
+    initialValue = widget.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Initial: $initialValue, Current: ${widget.value}',
+      textDirection: TextDirection.ltr,
+    );
+  }
 }

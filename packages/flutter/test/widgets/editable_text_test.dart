@@ -15565,6 +15565,7 @@ void main() {
       setState(() {
         key = keyTwo;
       });
+      tester.state<EditableTextState>(find.byType(EditableText)).showToolbar();
       await tester.pumpAndSettle();
 
       // Verify that it didn't crash and the menu is updated.
