@@ -3419,7 +3419,14 @@ class EditableTextState extends State<EditableText>
               return widget.contextMenuBuilder!(context, this);
             };
       if (_selectionOverlay!.toolbarIsVisible) {
-        _selectionOverlay!.showToolbar();
+        // Deferred to the next frame because showToolbar() calls
+        // renderBox.localToGlobal(), which requires a fully laid-out render
+        // tree. During didUpdateWidget the layout has not yet happened.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _selectionOverlay!.showToolbar();
+          }
+        });
       }
     }
 
