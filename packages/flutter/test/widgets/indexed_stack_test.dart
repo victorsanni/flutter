@@ -303,6 +303,7 @@ void main() {
     final Element siblingElement = tester.element(find.byKey(siblingKey, skipOffstage: false));
     expect(Visibility.of(siblingElement), isFalse);
   });
+
   testWidgets('Can update clipBehavior of IndexedStack', (WidgetTester tester) async {
     await tester.pumpWidget(const IndexedStack(textDirection: TextDirection.ltr));
     final RenderIndexedStack renderObject = tester.renderObject<RenderIndexedStack>(
