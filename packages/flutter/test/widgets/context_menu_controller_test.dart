@@ -278,7 +278,7 @@ void main() {
     controller.show(
       context: context,
       contextMenuBuilder: (BuildContext context) {
-        return const StatefulMenu(value: 1);
+        return const _StatefulMenu(value: 1);
       },
     );
     await tester.pump();
@@ -289,7 +289,7 @@ void main() {
     controller.show(
       context: context,
       contextMenuBuilder: (BuildContext context) {
-        return const StatefulMenu(value: 2);
+        return const _StatefulMenu(value: 2);
       },
     );
     await tester.pump();
@@ -315,7 +315,7 @@ void main() {
     controller.show(
       context: context,
       contextMenuBuilder: (BuildContext context) {
-        return const StatefulMenu(value: 1);
+        return const _StatefulMenu(value: 1);
       },
     );
     await tester.pump();
@@ -331,7 +331,7 @@ void main() {
     controller.show(
       context: context,
       contextMenuBuilder: (BuildContext context) {
-        return const StatefulMenu(value: 2);
+        return const _StatefulMenu(value: 2);
       },
     );
     await tester.pump();
@@ -344,14 +344,14 @@ void main() {
   });
 }
 
-class StatefulMenu extends StatefulWidget {
-  const StatefulMenu({super.key, required this.value});
+class _StatefulMenu extends StatefulWidget {
+  const _StatefulMenu({required this.value});
   final int value;
   @override
-  State<StatefulMenu> createState() => StatefulMenuState();
+  State<_StatefulMenu> createState() => _StatefulMenuState();
 }
 
-class StatefulMenuState extends State<StatefulMenu> {
+class _StatefulMenuState extends State<_StatefulMenu> {
   late int initialValue;
   @override
   void initState() {
