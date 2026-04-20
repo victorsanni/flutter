@@ -77,6 +77,7 @@ class ContextMenuController {
 
     _menuOverlayEntry = OverlayEntry(
       builder: (BuildContext context) {
+        assert(_shownInstance != null);
         final ContextMenuController instance = _shownInstance!;
         return instance._capturedThemes!.wrap(instance._contextMenuBuilder!(context));
       },

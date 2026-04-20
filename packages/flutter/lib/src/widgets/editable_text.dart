@@ -3409,22 +3409,23 @@ class EditableTextState extends State<EditableText>
     }
 
     // Update the context menu builder in place if the menu is already visible.
-    // This avoids disposing and recreating the overlay, which causes crashes
+    // This avoids disposing and recreating the overlay entry, which causes crashes
     // when rebuilds happen during the build phase (e.g. with inline lambdas).
-    if (_selectionOverlay != null && widget.contextMenuBuilder != oldWidget.contextMenuBuilder) {
-      _selectionOverlay!.contextMenuBuilder =
+    final TextSelectionOverlay? selectionOverlay = _selectionOverlay;
+    if (selectionOverlay != null && widget.contextMenuBuilder != oldWidget.contextMenuBuilder) {
+      selectionOverlay.contextMenuBuilder =
           widget.contextMenuBuilder == null || _webContextMenuEnabled
           ? null
           : (BuildContext context) {
               return widget.contextMenuBuilder!(context, this);
             };
-      final bool shouldShowToolbar = _selectionOverlay!.toolbarIsVisible;
+      final bool shouldShowToolbar = selectionOverlay.toolbarIsVisible;
       if (shouldShowToolbar) {
         // Deferred to the next frame because showToolbar() calls
         // renderBox.localToGlobal(), which requires a fully laid-out render
         // tree, and didUpdateWidget is called before layout.
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && shouldShowToolbar) {
+          if (mounted && _selectionOverlay != null && _selectionOverlay!.toolbarIsVisible) {
             _selectionOverlay!.showToolbar();
           }
         });

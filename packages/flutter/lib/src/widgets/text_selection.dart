@@ -465,7 +465,12 @@ class TextSelectionOverlay {
   void hideHandles() => _selectionOverlay.hideHandles();
 
   /// {@macro flutter.widgets.SelectionOverlay.showToolbar}
+  ///
+  /// This method requires a fully laid-out render tree (as it calls
+  /// [RenderBox.localToGlobal]), so it should not be called during the build or
+  /// layout phases.
   void showToolbar() {
+    assert(!renderObject.debugNeedsLayout);
     _updateSelectionOverlay();
 
     if (selectionControls != null && selectionControls is! TextSelectionHandleControls) {
