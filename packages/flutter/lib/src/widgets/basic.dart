@@ -6596,7 +6596,7 @@ class Flow extends MultiChildRenderObjectWidget {
 ///  * [Text.rich], a const text widget that provides similar functionality
 ///    as [RichText]. [Text.rich] will inherit [TextStyle] from [DefaultTextStyle].
 ///  * [SelectableRegion], which provides an overview of the selection system.
-class RichText extends MultiChildRenderObjectWidget {
+class RichText extends StatefulWidget {
   /// Creates a paragraph of rich text.
   ///
   /// The [maxLines] property may be null (and indeed defaults to null), but if
@@ -6631,13 +6631,20 @@ class RichText extends MultiChildRenderObjectWidget {
          textScaleFactor == 1.0 || identical(textScaler, TextScaler.noScaling),
          'Use textScaler instead.',
        ),
-       textScaler = _effectiveTextScalerFrom(textScaler, textScaleFactor),
-       super(
-         children: WidgetSpan.extractFromInlineSpan(
-           text,
-           _effectiveTextScalerFrom(textScaler, textScaleFactor),
-         ),
-       );
+       textScaler = _effectiveTextScalerFrom(textScaler, textScaleFactor);
+
+  static bool _hasPlaceholder(InlineSpan span) {
+    var found = false;
+    // visitChildren is pre-order recursive over the whole span tree.
+    span.visitChildren((InlineSpan child) {
+      if (child is PlaceholderSpan) {
+        found = true;
+        return false;
+      }
+      return true;
+    });
+    return found;
+  }
 
   static TextScaler _effectiveTextScalerFrom(TextScaler textScaler, double textScaleFactor) {
     return switch ((textScaler, textScaleFactor)) {
@@ -6735,43 +6742,7 @@ class RichText extends MultiChildRenderObjectWidget {
   final Color? selectionColor;
 
   @override
-  RenderParagraph createRenderObject(BuildContext context) {
-    assert(textDirection != null || debugCheckHasDirectionality(context));
-    return RenderParagraph(
-      text,
-      textAlign: textAlign,
-      textDirection: textDirection ?? Directionality.of(context),
-      softWrap: softWrap,
-      overflow: overflow,
-      textScaler: textScaler,
-      maxLines: maxLines,
-      strutStyle: strutStyle,
-      textWidthBasis: textWidthBasis,
-      textHeightBehavior: textHeightBehavior,
-      locale: locale ?? Localizations.maybeLocaleOf(context),
-      registrar: selectionRegistrar,
-      selectionColor: selectionColor,
-    );
-  }
-
-  @override
-  void updateRenderObject(BuildContext context, RenderParagraph renderObject) {
-    assert(textDirection != null || debugCheckHasDirectionality(context));
-    renderObject
-      ..text = text
-      ..textAlign = textAlign
-      ..textDirection = textDirection ?? Directionality.of(context)
-      ..softWrap = softWrap
-      ..overflow = overflow
-      ..textScaler = textScaler
-      ..maxLines = maxLines
-      ..strutStyle = strutStyle
-      ..textWidthBasis = textWidthBasis
-      ..textHeightBehavior = textHeightBehavior
-      ..locale = locale ?? Localizations.maybeLocaleOf(context)
-      ..registrar = selectionRegistrar
-      ..selectionColor = selectionColor;
-  }
+  State<RichText> createState() => _RichTextState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -6811,6 +6782,81 @@ class RichText extends MultiChildRenderObjectWidget {
         defaultValue: null,
       ),
     );
+  }
+}
+
+class _RichTextState extends State<RichText> {
+  // Stable per-State-lifetime identity used to scope placeholder semantics
+  // tags to this paragraph so that an ancestor paragraph's tags cannot
+  // collide with this paragraph's tags of the same index. Stored on the State
+  // so the identity survives [RichText] rebuilds, which keeps
+  // [RenderParagraph.semanticsOwner] stable and avoids extra semantics
+  // invalidation when the span tree is rebuilt with equivalent content.
+  // See https://github.com/flutter/flutter/issues/176570.
+  final Object _semanticsOwner = Object();
+
+  @override
+  Widget build(BuildContext context) {
+    // Only attach the owner when the span tree contains placeholders; for
+    // purely textual paragraphs, tags are never produced and the owner is
+    // unused.
+    final Object? owner = RichText._hasPlaceholder(widget.text) ? _semanticsOwner : null;
+    return _RichTextRenderObjectWidget(owner: owner, widget: widget);
+  }
+}
+
+class _RichTextRenderObjectWidget extends MultiChildRenderObjectWidget {
+  _RichTextRenderObjectWidget({required this.owner, required this.widget})
+    : super(
+        children: WidgetSpan.extractFromInlineSpan(
+          widget.text,
+          widget.textScaler,
+          owner: owner,
+        ),
+      );
+
+  final Object? owner;
+  final RichText widget;
+
+  @override
+  RenderParagraph createRenderObject(BuildContext context) {
+    assert(widget.textDirection != null || debugCheckHasDirectionality(context));
+    return RenderParagraph(
+      widget.text,
+      textAlign: widget.textAlign,
+      textDirection: widget.textDirection ?? Directionality.of(context),
+      softWrap: widget.softWrap,
+      overflow: widget.overflow,
+      textScaler: widget.textScaler,
+      maxLines: widget.maxLines,
+      strutStyle: widget.strutStyle,
+      textWidthBasis: widget.textWidthBasis,
+      textHeightBehavior: widget.textHeightBehavior,
+      locale: widget.locale ?? Localizations.maybeLocaleOf(context),
+      registrar: widget.selectionRegistrar,
+      selectionColor: widget.selectionColor,
+      semanticsOwner: owner,
+    );
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, RenderParagraph renderObject) {
+    assert(widget.textDirection != null || debugCheckHasDirectionality(context));
+    renderObject
+      ..text = widget.text
+      ..textAlign = widget.textAlign
+      ..textDirection = widget.textDirection ?? Directionality.of(context)
+      ..softWrap = widget.softWrap
+      ..overflow = widget.overflow
+      ..textScaler = widget.textScaler
+      ..maxLines = widget.maxLines
+      ..strutStyle = widget.strutStyle
+      ..textWidthBasis = widget.textWidthBasis
+      ..textHeightBehavior = widget.textHeightBehavior
+      ..locale = widget.locale ?? Localizations.maybeLocaleOf(context)
+      ..registrar = widget.selectionRegistrar
+      ..selectionColor = widget.selectionColor
+      ..semanticsOwner = owner;
   }
 }
 

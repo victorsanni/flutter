@@ -1588,6 +1588,198 @@ void main() {
     semantics.dispose();
   }, skip: isBrowser); // https://github.com/flutter/flutter/issues/87877
 
+  testWidgets('flat Text.rich preserves document order of WidgetSpan and TextSpan semantics', (
+    WidgetTester tester,
+  ) async {
+    // Diagnostic — same span pattern as #176570 but WITHOUT nesting.
+    final semantics = SemanticsTester(tester);
+
+    await tester.pumpWidget(
+      const Directionality(
+        textDirection: TextDirection.ltr,
+        child: Text.rich(
+          TextSpan(
+            children: <InlineSpan>[
+              WidgetSpan(child: Text('before')),
+              TextSpan(text: 'foo'),
+              WidgetSpan(child: Text('after')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      semantics,
+      hasSemantics(
+        TestSemantics.root(
+          children: <TestSemantics>[
+            TestSemantics(label: 'before\nfoo\nafter', textDirection: TextDirection.ltr),
+          ],
+        ),
+        ignoreId: true,
+        ignoreRect: true,
+        ignoreTransform: true,
+      ),
+    );
+    semantics.dispose();
+  }, skip: isBrowser);
+
+  testWidgets('nested Text.rich preserves document order of WidgetSpan and TextSpan semantics', (
+    WidgetTester tester,
+  ) async {
+    // Regression test for https://github.com/flutter/flutter/issues/176570.
+    final semantics = SemanticsTester(tester);
+
+    await tester.pumpWidget(
+      const Directionality(
+        textDirection: TextDirection.ltr,
+        child: Text.rich(
+          TextSpan(
+            children: <InlineSpan>[
+              WidgetSpan(
+                child: Text.rich(
+                  TextSpan(
+                    children: <InlineSpan>[
+                      WidgetSpan(child: Text('before')),
+                      TextSpan(text: 'foo'),
+                      WidgetSpan(child: Text('after')),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      semantics,
+      hasSemantics(
+        TestSemantics.root(
+          children: <TestSemantics>[
+            TestSemantics(label: 'before\nfoo\nafter', textDirection: TextDirection.ltr),
+          ],
+        ),
+        ignoreId: true,
+        ignoreRect: true,
+        ignoreTransform: true,
+      ),
+    );
+    semantics.dispose();
+  }, skip: isBrowser); // https://github.com/flutter/flutter/issues/87877
+
+  testWidgets(
+    'doubly-nested Text.rich preserves document order of WidgetSpan and TextSpan semantics',
+    (WidgetTester tester) async {
+      // Regression test for https://github.com/flutter/flutter/issues/176570.
+      // Three levels of nesting: outer wraps middle, middle wraps inner.
+      final semantics = SemanticsTester(tester);
+
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text.rich(
+            TextSpan(
+              children: <InlineSpan>[
+                WidgetSpan(
+                  child: Text.rich(
+                    TextSpan(
+                      children: <InlineSpan>[
+                        WidgetSpan(
+                          child: Text.rich(
+                            TextSpan(
+                              children: <InlineSpan>[
+                                WidgetSpan(child: Text('a')),
+                                TextSpan(text: 'b'),
+                                WidgetSpan(child: Text('c')),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        semantics,
+        hasSemantics(
+          TestSemantics.root(
+            children: <TestSemantics>[
+              TestSemantics(label: 'a\nb\nc', textDirection: TextDirection.ltr),
+            ],
+          ),
+          ignoreId: true,
+          ignoreRect: true,
+          ignoreTransform: true,
+        ),
+      );
+      semantics.dispose();
+    },
+    skip: isBrowser,
+  );
+
+  testWidgets(
+    'nested Text.rich preserves surrounding text in outer paragraph',
+    (WidgetTester tester) async {
+      // Regression test for https://github.com/flutter/flutter/issues/176570.
+      // Ensures the outer paragraph's own TextSpans surrounding a nested
+      // WidgetSpan remain in document order.
+      final semantics = SemanticsTester(tester);
+
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text.rich(
+            TextSpan(
+              children: <InlineSpan>[
+                TextSpan(text: 'prefix '),
+                WidgetSpan(
+                  child: Text.rich(
+                    TextSpan(
+                      children: <InlineSpan>[
+                        WidgetSpan(child: Text('before')),
+                        TextSpan(text: 'foo'),
+                        WidgetSpan(child: Text('after')),
+                      ],
+                    ),
+                  ),
+                ),
+                TextSpan(text: ' suffix'),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        semantics,
+        hasSemantics(
+          TestSemantics.root(
+            children: <TestSemantics>[
+              TestSemantics(
+                label: 'prefix \nbefore\nfoo\nafter\n suffix',
+                textDirection: TextDirection.ltr,
+              ),
+            ],
+          ),
+          ignoreId: true,
+          ignoreRect: true,
+          ignoreTransform: true,
+        ),
+      );
+      semantics.dispose();
+    },
+    skip: isBrowser,
+  );
+
   testWidgets('RenderParagraph intrinsic width', (WidgetTester tester) async {
     await tester.pumpWidget(
       Directionality(

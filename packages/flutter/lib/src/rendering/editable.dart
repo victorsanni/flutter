@@ -331,7 +331,9 @@ class RenderEditable extends RenderBox
     RenderEditablePainter? painter,
     RenderEditablePainter? foregroundPainter,
     List<RenderBox>? children,
-  }) : assert(maxLines == null || maxLines > 0),
+    Object? semanticsOwner,
+  }) : _semanticsOwner = semanticsOwner,
+       assert(maxLines == null || maxLines > 0),
        assert(minLines == null || minLines > 0),
        assert(
          (maxLines == null) || (minLines == null) || (maxLines >= minLines),
@@ -399,6 +401,24 @@ class RenderEditable extends RenderBox
     _updateForegroundPainter(foregroundPainter);
     _updatePainter(painter);
     addAll(children);
+  }
+
+  // Per-build identity used to scope [PlaceholderSpanIndexSemanticsTag]s so
+  // that an outer paragraph's tags cannot collide with a nested paragraph's
+  // tags of the same index.
+  // See https://github.com/flutter/flutter/issues/176570.
+  Object? _semanticsOwner;
+  /// Sets the identity used to scope placeholder-span semantics tags.
+  ///
+  /// Typically set by [EditableText] to match the identity passed to
+  /// [WidgetSpan.extractFromInlineSpan]. Changing this invalidates cached
+  /// semantics.
+  set semanticsOwner(Object? value) {
+    if (identical(_semanticsOwner, value)) {
+      return;
+    }
+    _semanticsOwner = value;
+    markNeedsSemanticsUpdate();
   }
 
   /// Child render objects
@@ -1443,7 +1463,7 @@ class RenderEditable extends RenderBox
         while (children.length > childIndex &&
             children
                 .elementAt(childIndex)
-                .isTagged(PlaceholderSpanIndexSemanticsTag(placeholderIndex))) {
+                .isTagged(PlaceholderSpanIndexSemanticsTag(placeholderIndex, owner: _semanticsOwner))) {
           final SemanticsNode childNode = children.elementAt(childIndex);
           final parentData = child!.parentData! as TextParentData;
           assert(parentData.offset != null);

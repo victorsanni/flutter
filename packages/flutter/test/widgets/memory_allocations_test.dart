@@ -43,11 +43,14 @@ void main() {
 
     expect(ma.hasListeners, false);
 
+    // Filter to this test's own State to avoid coupling to internal framework
+    // widgets that may be stateful (e.g. RichText). Any other stateful
+    // widget in the pump's tree would otherwise flip these flags.
     void listener(ObjectEvent event) {
-      if (event is ObjectCreated && event.object is State) {
+      if (event is ObjectCreated && event.object is _TestStatefulWidgetState) {
         stateCreated = true;
       }
-      if (event is ObjectDisposed && event.object is State) {
+      if (event is ObjectDisposed && event.object is _TestStatefulWidgetState) {
         stateDisposed = true;
       }
     }

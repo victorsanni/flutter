@@ -91,9 +91,20 @@ class WidgetSpan extends PlaceholderSpan {
   ///
   /// The `textScaler` is the scaling strategy for scaling the content.
   ///
+  /// The `owner`, if provided, is used to scope the
+  /// [PlaceholderSpanIndexSemanticsTag]s attached to each [WidgetSpan] so that
+  /// an ancestor paragraph's tags cannot collide with a descendant paragraph's
+  /// tags. [RichText] and [EditableText] each supply a stable per-element
+  /// [Object] as the owner (held by their [State]) so that the owner identity
+  /// is stable across rebuilds.
+  ///
   /// This function is used by [EditableText] and [RichText] so calling it
   /// directly is rarely necessary.
-  static List<Widget> extractFromInlineSpan(InlineSpan span, TextScaler textScaler) {
+  static List<Widget> extractFromInlineSpan(
+    InlineSpan span,
+    TextScaler textScaler, {
+    Object? owner,
+  }) {
     final widgets = <Widget>[];
     // _kEngineDefaultFontSize is the default font size to use when none of the
     // ancestor spans specifies one.
@@ -115,7 +126,7 @@ class WidgetSpan extends PlaceholderSpan {
           _WidgetSpanParentData(
             span: span,
             child: Semantics(
-              tagForChildren: PlaceholderSpanIndexSemanticsTag(index++),
+              tagForChildren: PlaceholderSpanIndexSemanticsTag(index++, owner: owner),
               child: _AutoScaleInlineWidget(
                 span: span,
                 textScaleFactor: textScaleFactor,

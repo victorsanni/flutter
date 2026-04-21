@@ -4598,6 +4598,79 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets(
+    'EditableText preserves document order of WidgetSpan semantics when nested inside a Text.rich',
+    (WidgetTester tester) async {
+      // Regression test for https://github.com/flutter/flutter/issues/176570.
+      // An outer Text.rich wraps an EditableText whose controller produces a
+      // span tree with multiple WidgetSpans. The outer's PlaceholderSpanIndex
+      // tag must not collide with the inner EditableText's tags of the same
+      // index. Expected semantic label order is "before foo after".
+      final semantics = SemanticsTester(tester);
+      final controller = _NestedWidgetSpanController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text.rich(
+              TextSpan(
+                children: <InlineSpan>[
+                  WidgetSpan(
+                    child: SizedBox(
+                      width: 200,
+                      height: 30,
+                      child: EditableText(
+                        backgroundCursorColor: Colors.grey,
+                        controller: controller,
+                        focusNode: focusNode,
+                        style: textStyle,
+                        cursorColor: cursorColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // The critical regression check: the outer Text.rich's placeholder
+      // tag must not consume the inner EditableText's second WidgetSpan.
+      // If the bug were present, the outer's Tag(0) would match both the
+      // inner's "before" (Tag(0)) and "after" (which also inherits Tag(0)),
+      // producing a malformed tree and/or a framework assertion.
+      expect(tester.takeException(), isNull);
+
+      // The RenderEditable merges the two surrounding WidgetSpans into its
+      // own label and exposes the text-field content via `value`. The
+      // regression would cause "after" (an inner Tag(1) child that also
+      // inherits outer Tag(0)) to be consumed on the outer's placeholder 0
+      // alongside "before", corrupting the label. With the fix, both
+      // WidgetSpan labels appear in document order within the label, and
+      // the text-field value carries "foo".
+      final String dump =
+          tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!.toStringDeep();
+      final int beforeIndex = dump.indexOf('before');
+      final int afterIndex = dump.indexOf('after');
+      expect(beforeIndex, greaterThanOrEqualTo(0));
+      expect(afterIndex, greaterThanOrEqualTo(0));
+      expect(
+        beforeIndex < afterIndex,
+        isTrue,
+        reason:
+            'Expected "before" to precede "after" in the semantics label '
+            'dump, but got before=$beforeIndex, after=$afterIndex.\n$dump',
+      );
+      expect(dump, contains('foo'));
+
+      semantics.dispose();
+    },
+  );
+
   testWidgets('EditableText includes text as value in semantics', (WidgetTester tester) async {
     final semantics = SemanticsTester(tester);
 
@@ -18921,6 +18994,30 @@ class SkipPainting extends SingleChildRenderObjectWidget {
 class SkipPaintingRenderObject extends RenderProxyBox {
   @override
   void paint(PaintingContext context, Offset offset) {}
+}
+
+// A TextEditingController that wraps its content text with two WidgetSpans
+// surrounding the TextSpan, used to reproduce the semantics-ordering
+// regression in https://github.com/flutter/flutter/issues/176570.
+class _NestedWidgetSpanController extends TextEditingController {
+  _NestedWidgetSpanController() : super(text: 'foo');
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+    SpellCheckConfiguration? spellCheckConfiguration,
+  }) {
+    return TextSpan(
+      style: style,
+      children: const <InlineSpan>[
+        WidgetSpan(child: Text('before')),
+        TextSpan(text: 'foo'),
+        WidgetSpan(child: Text('after')),
+      ],
+    );
+  }
 }
 
 class _AccentColorTextEditingController extends TextEditingController {

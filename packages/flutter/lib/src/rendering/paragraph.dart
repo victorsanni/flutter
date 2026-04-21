@@ -55,21 +55,35 @@ const String _kEllipsis = '\u2026';
 class PlaceholderSpanIndexSemanticsTag extends SemanticsTag {
   /// Creates a semantics tag with the input `index`.
   ///
-  /// Different [PlaceholderSpanIndexSemanticsTag]s with the same `index` are
-  /// consider the same.
-  const PlaceholderSpanIndexSemanticsTag(this.index)
+  /// Two [PlaceholderSpanIndexSemanticsTag]s are considered the same when they
+  /// have the same `index` AND the same (identical) `owner`. The `owner` is a
+  /// per-paragraph identity (typically a stable [Object] held by [RichText]'s
+  /// [State] or [EditableTextState]); distinguishing by owner prevents an
+  /// ancestor paragraph's tags from colliding with a descendant paragraph's
+  /// tags when they share indices.
+  /// See https://github.com/flutter/flutter/issues/176570.
+  const PlaceholderSpanIndexSemanticsTag(this.index, {this.owner})
     : super('PlaceholderSpanIndexSemanticsTag($index)');
 
   /// The index of this tag.
   final int index;
 
+  /// The object that owns this tag, used to distinguish tags created by
+  /// different paragraphs that happen to share a placeholder [index].
+  ///
+  /// Equality uses [identical] on this field.
+  final Object? owner;
+
   @override
   bool operator ==(Object other) {
-    return other is PlaceholderSpanIndexSemanticsTag && other.index == index;
+    return other is PlaceholderSpanIndexSemanticsTag
+        && other.index == index
+        && identical(other.owner, owner);
   }
 
   @override
-  int get hashCode => Object.hash(PlaceholderSpanIndexSemanticsTag, index);
+  int get hashCode =>
+      Object.hash(PlaceholderSpanIndexSemanticsTag, index, identityHashCode(owner));
 }
 
 /// Parent data used by [RenderParagraph] and [RenderEditable] to annotate
@@ -353,6 +367,7 @@ class RenderParagraph extends RenderBox
     List<RenderBox>? children,
     Color? selectionColor,
     SelectionRegistrar? registrar,
+    Object? semanticsOwner,
   }) : assert(text.debugAssertIsValid()),
        assert(maxLines == null || maxLines > 0),
        assert(
@@ -362,6 +377,7 @@ class RenderParagraph extends RenderBox
        _softWrap = softWrap,
        _overflow = overflow,
        _selectionColor = selectionColor,
+       _semanticsOwner = semanticsOwner,
        _textPainter = TextPainter(
          text: text,
          textAlign: textAlign,
@@ -383,6 +399,24 @@ class RenderParagraph extends RenderBox
   static final String _placeholderCharacter = String.fromCharCode(
     PlaceholderSpan.placeholderCodeUnit,
   );
+
+  // Per-build identity used to scope [PlaceholderSpanIndexSemanticsTag]s so
+  // that an outer [RenderParagraph]'s tags cannot collide with a nested
+  // [RenderParagraph]'s tags of the same index.
+  // See https://github.com/flutter/flutter/issues/176570.
+  Object? _semanticsOwner;
+  /// Sets the identity used to scope placeholder-span semantics tags.
+  ///
+  /// This is typically set by [RichText] to match the identity it passes to
+  /// [WidgetSpan.extractFromInlineSpan]. Changing this invalidates cached
+  /// semantics.
+  set semanticsOwner(Object? value) {
+    if (identical(_semanticsOwner, value)) {
+      return;
+    }
+    _semanticsOwner = value;
+    markNeedsSemanticsUpdate();
+  }
 
   final TextPainter _textPainter;
 
@@ -1247,7 +1281,7 @@ class RenderParagraph extends RenderBox
         // Mark every childConfig belongs to this placeholder to merge up group.
         while (childConfigsIndex < childConfigs.length &&
             childConfigs[childConfigsIndex].tagsChildrenWith(
-              PlaceholderSpanIndexSemanticsTag(placeholderIndex),
+              PlaceholderSpanIndexSemanticsTag(placeholderIndex, owner: _semanticsOwner),
             )) {
           builder.markAsMergeUp(childConfigs[childConfigsIndex]);
           childConfigsIndex += 1;
@@ -1325,7 +1359,7 @@ class RenderParagraph extends RenderBox
         while (children.length > childIndex &&
             children
                 .elementAt(childIndex)
-                .isTagged(PlaceholderSpanIndexSemanticsTag(placeholderIndex))) {
+                .isTagged(PlaceholderSpanIndexSemanticsTag(placeholderIndex, owner: _semanticsOwner))) {
           final SemanticsNode childNode = children.elementAt(childIndex);
           final parentData = child!.parentData! as TextParentData;
           // parentData.scale may be null if the render object is truncated.

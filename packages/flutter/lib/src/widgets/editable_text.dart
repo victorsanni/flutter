@@ -2508,6 +2508,14 @@ class EditableTextState extends State<EditableText>
   final ValueNotifier<bool> _cursorVisibilityNotifier = ValueNotifier<bool>(true);
   final GlobalKey _editableKey = GlobalKey();
 
+  // Stable per-state identity used to scope the [PlaceholderSpanIndexSemanticsTag]s
+  // attached to this editable's [WidgetSpan]s, so an ancestor paragraph's tags
+  // cannot collide with this editable's tags of the same index. Storing this on
+  // the State keeps the owner stable across rebuilds, so rebuilds with the
+  // same placeholder structure do not churn semantics.
+  // See https://github.com/flutter/flutter/issues/176570.
+  final Object _semanticsOwner = Object();
+
   /// Detects whether the clipboard can paste.
   final ClipboardStatusNotifier clipboardStatus = kIsWeb
       // Web browsers will show a permission dialog when Clipboard.hasStrings is
@@ -5921,6 +5929,7 @@ class EditableTextState extends State<EditableText>
                                     promptRectRange: _currentPromptRectRange,
                                     promptRectColor: widget.autocorrectionTextRectColor,
                                     clipBehavior: widget.clipBehavior,
+                                    semanticsOwner: _semanticsOwner,
                                   ),
                                 ),
                               ),
@@ -6058,9 +6067,20 @@ class _Editable extends MultiChildRenderObjectWidget {
     this.promptRectRange,
     this.promptRectColor,
     required this.clipBehavior,
+    required Object semanticsOwner,
   }) : selectionHeightStyle = selectionHeightStyle ?? EditableText.defaultSelectionHeightStyle,
        selectionWidthStyle = selectionWidthStyle ?? EditableText.defaultSelectionWidthStyle,
-       super(children: WidgetSpan.extractFromInlineSpan(inlineSpan, textScaler));
+       _semanticsOwner = semanticsOwner,
+       super(
+         children: WidgetSpan.extractFromInlineSpan(inlineSpan, textScaler, owner: semanticsOwner),
+       );
+
+  // Identity used to scope placeholder-span semantics tags to this editable
+  // so they cannot collide with an ancestor paragraph's tags of the same
+  // index. Owned by [EditableTextState] so it is stable across rebuilds,
+  // avoiding unnecessary semantics invalidation.
+  // See https://github.com/flutter/flutter/issues/176570.
+  final Object _semanticsOwner;
 
   final InlineSpan inlineSpan;
   final TextEditingValue value;
@@ -6142,6 +6162,7 @@ class _Editable extends MultiChildRenderObjectWidget {
       promptRectRange: promptRectRange,
       promptRectColor: promptRectColor,
       clipBehavior: clipBehavior,
+      semanticsOwner: _semanticsOwner,
     );
   }
 
@@ -6185,6 +6206,7 @@ class _Editable extends MultiChildRenderObjectWidget {
       ..paintCursorAboveText = paintCursorAboveText
       ..promptRectColor = promptRectColor
       ..clipBehavior = clipBehavior
+      ..semanticsOwner = _semanticsOwner
       ..setPromptRectRange(promptRectRange);
   }
 }
