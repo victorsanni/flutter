@@ -649,7 +649,7 @@ class RenderTable extends RenderBox {
     }
 
     int findRowIndex(double top) {
-      for (int i = _rowTops.length - 1; i >= 0; i--) {
+      for (int i = _rows - 1; i >= 0; i--) {
         if (_rowTops[i] <= top) {
           return i;
         }
