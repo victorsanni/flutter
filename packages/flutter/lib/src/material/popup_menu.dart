@@ -1162,7 +1162,6 @@ typedef PopupMenuPositionBuilder =
 ///    calling this method automatically.
 ///  * [SemanticsConfiguration.namesRoute], for a description of edge triggered
 ///    semantics.
-@awaitNotRequired
 Future<T?> showMenu<T>({
   required BuildContext context,
   RelativeRect? position,
