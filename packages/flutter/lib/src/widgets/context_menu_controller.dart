@@ -73,7 +73,6 @@ class ContextMenuController {
     }
 
     removeAny();
-
     final OverlayState overlayState = Overlay.of(
       context,
       rootOverlay: true,
