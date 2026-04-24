@@ -3408,32 +3408,30 @@ class EditableTextState extends State<EditableText>
       _updateRemoteEditingValueIfNeeded();
     }
 
-    // Update the context menu builder in place if the menu is already visible.
-    // This avoids disposing and recreating the overlay entry, which causes crashes
-    // when rebuilds happen during the build phase (e.g. with inline lambdas).
+    // If only the identity of the context menu builder closure changed (e.g.
+    // an inline lambda on every rebuild), the [TextSelectionOverlay] does
+    // not need to be recreated.
+    //
+    // We just need to trigger a rebuild of the currently-shown toolbar so its
+    // overlay entry picks up the new closure.
     final TextSelectionOverlay? selectionOverlay = _selectionOverlay;
-    if (selectionOverlay != null && widget.contextMenuBuilder != oldWidget.contextMenuBuilder) {
-      selectionOverlay.contextMenuBuilder =
-          widget.contextMenuBuilder == null || _webContextMenuEnabled
-          ? null
-          : (BuildContext context) {
-              return widget.contextMenuBuilder!(context, this);
-            };
-      final bool shouldShowToolbar = selectionOverlay.toolbarIsVisible;
-      if (shouldShowToolbar) {
-        // Deferred to the next frame because showToolbar() calls
-        // renderBox.localToGlobal(), which requires a fully laid-out render
-        // tree, and didUpdateWidget is called before layout.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _selectionOverlay != null && _selectionOverlay!.toolbarIsVisible) {
-            _selectionOverlay!.showToolbar();
-          }
-        });
-      }
+    if (selectionOverlay != null &&
+        selectionOverlay.toolbarIsVisible &&
+        widget.contextMenuBuilder != oldWidget.contextMenuBuilder &&
+        (widget.contextMenuBuilder == null) == (oldWidget.contextMenuBuilder == null)) {
+      // Deferred to the next frame because showToolbar() calls
+      // renderBox.localToGlobal(), which requires a fully laid-out render
+      // tree, and didUpdateWidget is called before layout.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && (_selectionOverlay?.toolbarIsVisible ?? false)) {
+          _selectionOverlay!.showToolbar();
+        }
+      });
     }
 
     if (_selectionOverlay != null &&
-        (widget.selectionControls != oldWidget.selectionControls ||
+        ((widget.contextMenuBuilder == null) != (oldWidget.contextMenuBuilder == null) ||
+            widget.selectionControls != oldWidget.selectionControls ||
             widget.onSelectionHandleTapped != oldWidget.onSelectionHandleTapped ||
             widget.dragStartBehavior != oldWidget.dragStartBehavior ||
             widget.magnifierConfiguration != oldWidget.magnifierConfiguration)) {
@@ -4405,8 +4403,17 @@ class EditableTextState extends State<EditableText>
     return true;
   }
 
+  // Stable method reference that dispatches to the current
+  // widget.contextMenuBuilder.
+  //
+  // The identity of this method is constant across rebuilds, so passing it to
+  // the TextSelectionOverlay means the overlay never has to be recreated when
+  // only the builder closure changes.
+  Widget _contextMenuBuilder(BuildContext context) {
+    return widget.contextMenuBuilder!(context, this);
+  }
+
   TextSelectionOverlay _createSelectionOverlay() {
-    final EditableTextContextMenuBuilder? contextMenuBuilder = widget.contextMenuBuilder;
     final selectionOverlay = TextSelectionOverlay(
       clipboardStatus: clipboardStatus,
       context: context,
@@ -4420,11 +4427,9 @@ class EditableTextState extends State<EditableText>
       selectionDelegate: this,
       dragStartBehavior: widget.dragStartBehavior,
       onSelectionHandleTapped: widget.onSelectionHandleTapped,
-      contextMenuBuilder: contextMenuBuilder == null || _webContextMenuEnabled
+      contextMenuBuilder: widget.contextMenuBuilder == null || _webContextMenuEnabled
           ? null
-          : (BuildContext context) {
-              return contextMenuBuilder(context, this);
-            },
+          : _contextMenuBuilder,
       magnifierConfiguration: widget.magnifierConfiguration,
     );
 

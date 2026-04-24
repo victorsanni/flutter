@@ -345,10 +345,9 @@ class TextSelectionOverlay {
     DragStartBehavior dragStartBehavior = DragStartBehavior.start,
     VoidCallback? onSelectionHandleTapped,
     ClipboardStatusNotifier? clipboardStatus,
-    WidgetBuilder? contextMenuBuilder,
+    this.contextMenuBuilder,
     required TextMagnifierConfiguration magnifierConfiguration,
-  }) : _contextMenuBuilder = contextMenuBuilder,
-       _handlesVisible = handlesVisible,
+  }) : _handlesVisible = handlesVisible,
        _value = value {
     assert(debugMaybeDispatchCreated('widgets', 'TextSelectionOverlay', this));
     renderObject.selectionStartInViewport.addListener(_updateTextSelectionOverlayVisibilities);
@@ -409,14 +408,7 @@ class TextSelectionOverlay {
   /// {@macro flutter.widgets.EditableText.contextMenuBuilder}
   ///
   /// If not provided, no context menu will be built.
-  WidgetBuilder? get contextMenuBuilder => _contextMenuBuilder;
-  WidgetBuilder? _contextMenuBuilder;
-  set contextMenuBuilder(WidgetBuilder? value) {
-    if (_contextMenuBuilder == value) {
-      return;
-    }
-    _contextMenuBuilder = value;
-  }
+  final WidgetBuilder? contextMenuBuilder;
 
   /// Retrieve current value.
   @visibleForTesting
@@ -470,7 +462,10 @@ class TextSelectionOverlay {
   /// [RenderBox.localToGlobal]), so it should not be called during the build or
   /// layout phases.
   void showToolbar() {
-    assert(!renderObject.debugNeedsLayout);
+    assert(
+      SchedulerBinding.instance.schedulerPhase != SchedulerPhase.persistentCallbacks,
+      'showToolbar must not be called during the build or layout phase.',
+    );
     _updateSelectionOverlay();
 
     if (selectionControls != null && selectionControls is! TextSelectionHandleControls) {
