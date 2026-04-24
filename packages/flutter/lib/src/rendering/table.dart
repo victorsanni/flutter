@@ -649,6 +649,8 @@ class RenderTable extends RenderBox {
     }
 
     int findRowIndex(double top) {
+      // Iterate over _rows rather than _rowTops.length because _rowTops has one
+      // additional entry that marks the bottom boundary of the last row.
       for (int i = _rows - 1; i >= 0; i--) {
         if (_rowTops[i] <= top) {
           return i;
