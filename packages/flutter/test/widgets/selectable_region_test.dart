@@ -6786,6 +6786,182 @@ void main() {
     expect(paragraph.selections, isNotEmpty);
     expect(paragraph.selections.first, const TextSelection(baseOffset: 0, extentOffset: 12));
   });
+
+  testWidgets(
+    'selects backwards across multiple Text widgets and WidgetSpans via mouse drag',
+    (WidgetTester tester) async {
+      // Regression test for https://github.com/flutter/flutter/issues/166462.
+      await tester.pumpWidget(
+        TestWidgetsApp(
+          home: SelectableRegion(
+            selectionControls: emptyTextSelectionControls,
+            child: Column(
+              children: List<Widget>.generate(5, (int index) {
+                return Text.rich(
+                  TextSpan(
+                    children: <InlineSpan>[
+                      WidgetSpan(child: Text('${index + 1}. ')),
+                      TextSpan(text: 'Item ${index + 1}'),
+                    ],
+                  ),
+                  key: ValueKey<int>(index),
+                );
+              }),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Start at the bottom right of the last item.
+      final Offset dragStart = tester.getBottomRight(find.byKey(const ValueKey<int>(4)));
+      // End at the top left of the first item.
+      final Offset dragEnd = tester.getTopLeft(find.byKey(const ValueKey<int>(0)));
+
+      final TestGesture gesture = await tester.startGesture(
+        dragStart,
+        kind: PointerDeviceKind.mouse,
+      );
+      addTearDown(gesture.removePointer);
+      await tester.pump();
+
+      // Drag backwards up to the top left.
+      await gesture.moveTo(dragEnd);
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 5; i += 1) {
+        final Iterable<RenderParagraph> paragraphs = tester.renderObjectList<RenderParagraph>(
+          find.descendant(of: find.byKey(ValueKey<int>(i)), matching: find.byType(RichText)),
+        );
+
+        // The inner widget (WidgetSpan) contains the index text.
+        final RenderParagraph innerParagraph = paragraphs.firstWhere(
+          (RenderParagraph p) => p.text.toPlainText().contains('${i + 1}. '),
+        );
+
+        // The outer widget contains the placeholder character and the item text.
+        final RenderParagraph outerParagraph = paragraphs.firstWhere(
+          (RenderParagraph p) => p.text.toPlainText().contains('Item ${i + 1}'),
+        );
+
+        // Check the WidgetSpan's inner text first.
+        expect(innerParagraph.selections, isNotEmpty);
+        expect(innerParagraph.selections.first.start, 0);
+        expect(innerParagraph.selections.first.end, innerParagraph.text.toPlainText().length);
+
+        // Then check the outer text.
+        expect(outerParagraph.selections, isNotEmpty);
+        expect(outerParagraph.selections.first.start, 1);
+        expect(outerParagraph.selections.first.end, outerParagraph.text.toPlainText().length);
+      }
+    },
+    variant: TargetPlatformVariant.all(),
+  );
+
+  testWidgets('triple-click-drag backwards involving WidgetSpans', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      TestWidgetsApp(
+        home: SelectableRegion(
+          selectionControls: testTextSelectionHandleControls,
+          child: ListView(
+            children: const <Widget>[
+              Text.rich(
+                TextSpan(
+                  children: <InlineSpan>[
+                    WidgetSpan(child: Text('Text A.')),
+                    TextSpan(text: '\n'),
+                    WidgetSpan(child: Text('Text B.')),
+                    TextSpan(text: '\n'),
+                    WidgetSpan(child: Text('Text C.')),
+                  ],
+                ),
+                key: Key('rich1'),
+              ),
+              Text.rich(
+                TextSpan(
+                  children: <InlineSpan>[
+                    WidgetSpan(child: Text('Text D.')),
+                    TextSpan(text: '\n'),
+                    WidgetSpan(child: Text('Text E.')),
+                    TextSpan(text: '\n'),
+                    WidgetSpan(child: Text('Text F.')),
+                  ],
+                ),
+                key: Key('rich2'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final RenderParagraph paragraphE = tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.text('Text E.'), matching: find.byType(RichText)),
+    );
+    final RenderParagraph paragraphB = tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.text('Text B.'), matching: find.byType(RichText)),
+    );
+
+    // Triple-click on Text E.
+    final TestGesture gesture = await tester.startGesture(
+      textOffsetToPosition(paragraphE, 2),
+      kind: PointerDeviceKind.mouse,
+    );
+    addTearDown(gesture.removePointer);
+    await tester.pump();
+    await gesture.up();
+    await tester.pump();
+
+    await gesture.down(textOffsetToPosition(paragraphE, 2));
+    await tester.pump();
+    await gesture.up();
+    await tester.pump();
+
+    await gesture.down(textOffsetToPosition(paragraphE, 2));
+    await tester.pumpAndSettle();
+
+    // Text E should be selected after triple-click.
+    expect(paragraphE.selections.isNotEmpty, isTrue);
+    expect(paragraphE.selections[0], const TextSelection(baseOffset: 0, extentOffset: 7));
+
+    // Drag backward to Text B.
+    await gesture.moveTo(textOffsetToPosition(paragraphB, 3));
+    await tester.pumpAndSettle();
+
+    final RenderParagraph paragraphC = tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.text('Text C.'), matching: find.byType(RichText)),
+    );
+    final RenderParagraph paragraphD = tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.text('Text D.'), matching: find.byType(RichText)),
+    );
+
+    final RenderParagraph outerParagraph1 = tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.byKey(const Key('rich1')), matching: find.byType(RichText)).first,
+    );
+    final RenderParagraph outerParagraph2 = tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.byKey(const Key('rich2')), matching: find.byType(RichText)).first,
+    );
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    // When dragging backward from Text E to Text B, all paragraphs between
+    // B and E should be fully selected in reverse.
+    expect(paragraphB.selections, isNotEmpty);
+    expect(paragraphC.selections, isNotEmpty);
+    expect(paragraphD.selections, isNotEmpty);
+    expect(paragraphE.selections, isNotEmpty);
+    expect(outerParagraph1.selections, isNotEmpty);
+    expect(outerParagraph2.selections, isNotEmpty);
+    expect(paragraphB.selections[0], const TextSelection(baseOffset: 7, extentOffset: 0));
+    expect(paragraphC.selections[0], const TextSelection(baseOffset: 7, extentOffset: 0));
+    expect(paragraphD.selections[0], const TextSelection(baseOffset: 7, extentOffset: 0));
+    expect(paragraphE.selections[0], const TextSelection(baseOffset: 7, extentOffset: 0));
+    expect(outerParagraph1.selections[0], const TextSelection(baseOffset: 4, extentOffset: 3));
+    expect(outerParagraph2.selections[0], const TextSelection(baseOffset: 2, extentOffset: 1));
+  });
 }
 
 class ColumnSelectionContainerDelegate extends StaticSelectionContainerDelegate {
