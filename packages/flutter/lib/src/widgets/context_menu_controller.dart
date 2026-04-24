@@ -74,12 +74,6 @@ class ContextMenuController {
 
     removeAny();
 
-    _contextMenuBuilder = contextMenuBuilder;
-    _capturedThemes = InheritedTheme.capture(
-      from: context,
-      to: Navigator.maybeOf(context)?.context,
-    );
-
     final OverlayState overlayState = Overlay.of(
       context,
       rootOverlay: true,
