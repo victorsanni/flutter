@@ -85,6 +85,11 @@ class ContextMenuController {
       rootOverlay: true,
       debugRequiredFor: debugRequiredFor,
     );
+    _contextMenuBuilder = contextMenuBuilder;
+    _capturedThemes = InheritedTheme.capture(
+      from: context,
+      to: Navigator.maybeOf(context)?.context,
+    );
 
     _menuOverlayEntry = OverlayEntry(
       builder: (BuildContext context) {
