@@ -1795,10 +1795,9 @@ class Scaffold extends StatefulWidget {
 
   /// Whether the [body] should extend behind the soft keyboard.
   ///
-  /// Defaults to false. When set to true, [body] is laid out and painted
-  /// across the full available height even when
-  /// [MediaQueryData.viewInsets.bottom] is non-zero (typically because the
-  /// on-screen keyboard is visible). Unlike the default
+  /// When set to true, [body] is laid out and painted across the full available
+  /// height even when [MediaQueryData.viewInsets.bottom] is non-zero (typically
+  /// because the on-screen keyboard is visible). Unlike the default
   /// [resizeToAvoidBottomInset] behavior, the keyboard's view inset is left
   /// intact in the inherited [MediaQuery], so descendants can read it and
   /// pad themselves (for example by giving a [ListView] a
@@ -1806,9 +1805,8 @@ class Scaffold extends StatefulWidget {
   /// to keep their interactive contents above the keyboard.
   ///
   /// This is useful on platforms where the keyboard is translucent (such as
-  /// iOS 26+ "Liquid Glass") — letting the app paint under the keyboard
-  /// avoids exposing the modal barrier or window clear color through the
-  /// keyboard.
+  /// modern iOS versions) — letting the app paint under the keyboard avoids
+  /// exposing the modal barrier or window clear color through the keyboard.
   ///
   /// The [floatingActionButton], [bottomSheet] and [snackBar] continue to
   /// position above the keyboard; only the [body] (and the body scrim shown
@@ -1817,6 +1815,8 @@ class Scaffold extends StatefulWidget {
   ///
   /// This property has no effect when [resizeToAvoidBottomInset] is false,
   /// since in that case the body already fills the full height.
+  ///
+  /// Defaults to false.
   ///
   /// See also:
   ///

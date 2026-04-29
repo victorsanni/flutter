@@ -88,7 +88,7 @@ class CupertinoPageScaffold extends StatefulWidget {
 
   /// Whether the [child] should extend behind the soft keyboard.
   ///
-  /// Defaults to false. When set to true, the scaffold's [child] is laid out
+  /// When set to true, the scaffold's [child] is laid out
   /// and painted across the full available height even when
   /// [MediaQueryData.viewInsets.bottom] is non-zero (typically because the
   /// on-screen keyboard is visible). Unlike the default
@@ -97,12 +97,13 @@ class CupertinoPageScaffold extends StatefulWidget {
   /// pad themselves to keep their interactive contents above the keyboard.
   ///
   /// This is useful on platforms where the keyboard is translucent (such as
-  /// iOS 26+ "Liquid Glass") — letting the app paint under the keyboard
-  /// avoids exposing the modal barrier or window clear color through the
-  /// keyboard.
+  /// modern iOS versions) — letting the app paint under the keyboard avoids
+  /// exposing the modal barrier or window clear color through the keyboard.
   ///
   /// This property has no effect when [resizeToAvoidBottomInset] is false,
   /// since in that case the child already fills the full height.
+  ///
+  /// Defaults to false.
   final bool extendContentBehindKeyboard;
 
   @override
@@ -178,9 +179,7 @@ class _CupertinoPageScaffoldState extends State<CupertinoPageScaffold> with Widg
           widget.navigationBar!.preferredSize.height + existingMediaQuery.padding.top;
 
       // Propagate bottom padding and include viewInsets if appropriate
-      final double bottomPadding = consumeBottomInset
-          ? existingMediaQuery.viewInsets.bottom
-          : 0.0;
+      final double bottomPadding = consumeBottomInset ? existingMediaQuery.viewInsets.bottom : 0.0;
 
       final EdgeInsets newViewInsets = consumeBottomInset
           // The insets are consumed by the scaffolds and no longer exposed to
