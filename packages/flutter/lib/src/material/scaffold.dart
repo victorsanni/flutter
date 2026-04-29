@@ -692,16 +692,22 @@ class ScaffoldPrelayoutGeometry {
   /// this will be [Size.zero].
   final Size bottomSheetSize;
 
-  /// The vertical distance from the Scaffold's origin to the bottom of
-  /// [Scaffold.body].
+  /// The keyboard-aware bottom edge used to position bottom-anchored
+  /// scaffold widgets such as the [FloatingActionButton], [BottomSheet],
+  /// and [SnackBar].
+  ///
+  /// This is the vertical distance from the Scaffold's origin to the bottom
+  /// of [Scaffold.body] in the default case where the body avoids the
+  /// keyboard. When [Scaffold.extendBodyBehindKeyboard] is true the body
+  /// itself may extend below this value (behind the keyboard), but the
+  /// [FloatingActionButton] and other bottom-anchored widgets are still
+  /// positioned relative to [contentBottom].
   ///
   /// This is useful in a [FloatingActionButtonLocation] designed to
   /// place the [FloatingActionButton] at the bottom of the screen, while
   /// keeping it above the [BottomSheet], the [Scaffold.bottomNavigationBar],
-  /// or the keyboard.
-  ///
-  /// The [Scaffold.body] is laid out with respect to [minInsets] already. This
-  /// means that a [FloatingActionButtonLocation] does not need to factor in
+  /// or the keyboard. The value is computed with respect to [minInsets], so
+  /// a [FloatingActionButtonLocation] does not need to factor in
   /// [EdgeInsets.bottom] of [minInsets] when aligning a [FloatingActionButton]
   /// to [contentBottom].
   final double contentBottom;
@@ -1003,11 +1009,13 @@ class _ScaffoldLayout extends MultiChildLayoutDelegate {
     required this.snackBarWidth,
     required this.extendBody,
     required this.extendBodyBehindAppBar,
+    required this.extendBodyBehindKeyboard,
     required this.extendBodyBehindMaterialBanner,
   }) : super(relayout: floatingActionButtonMoveAnimation);
 
   final bool extendBody;
   final bool extendBodyBehindAppBar;
+  final bool extendBodyBehindKeyboard;
   final EdgeInsets minInsets;
   final EdgeInsets minViewPadding;
   final TextDirection textDirection;
@@ -1084,18 +1092,37 @@ class _ScaffoldLayout extends MultiChildLayoutDelegate {
 
     // Set the content bottom to account for the greater of the height of any
     // bottom-anchored material widgets or of the keyboard or other
-    // bottom-anchored system UI.
+    // bottom-anchored system UI. This is the visible content bottom used by
+    // FAB, bottom sheet, body scrim, and other widgets that should not be
+    // obscured by the keyboard.
     final double contentBottom = math.max(
       0.0,
       bottom - math.max(minInsets.bottom, bottomWidgetsHeight),
     );
 
+    // The body's effective bottom.
+    //
+    // When extendBodyBehindKeyboard is true the body is allowed to extend
+    // behind the soft keyboard; the keyboard inset (part of minInsets.bottom)
+    // is ignored for the body slot only. Bottom-anchored widgets like the
+    // bottomNavigationBar still occupy bottomWidgetsHeight at the bottom of the
+    // screen.
+    final double bodyContentBottom = extendBodyBehindKeyboard
+        ? math.max(0.0, bottom - bottomWidgetsHeight)
+        : contentBottom;
+
     if (hasChild(_ScaffoldSlot.body)) {
-      double bodyMaxHeight = math.max(0.0, contentBottom - contentTop);
+      double bodyMaxHeight = math.max(0.0, bodyContentBottom - contentTop);
 
       // When extendBody is true, the body is visible underneath the bottom widgets.
-      // This does not apply when the area is obscured by the device keyboard.
-      if (extendBody && minInsets.bottom <= bottomWidgetsHeight) {
+      // Normally this does not apply when the area is obscured by the device
+      // keyboard, but when extendBodyBehindKeyboard is also true the caller has
+      // explicitly asked the body to extend behind the keyboard, so the two
+      // flags compose: the body extends behind both the bottom widgets and the
+      // keyboard.
+      final bool extendBodyApplies =
+          extendBody && (minInsets.bottom <= bottomWidgetsHeight || extendBodyBehindKeyboard);
+      if (extendBodyApplies) {
         bodyMaxHeight += bottomWidgetsHeight;
         bodyMaxHeight = clampDouble(bodyMaxHeight, 0.0, looseConstraints.maxHeight - contentTop);
         assert(bodyMaxHeight <= math.max(0.0, looseConstraints.maxHeight - contentTop));
@@ -1129,9 +1156,14 @@ class _ScaffoldLayout extends MultiChildLayoutDelegate {
     Size bottomSheetSize = Size.zero;
     Size snackBarSize = Size.zero;
     if (hasChild(_ScaffoldSlot.bodyScrim)) {
+      // The bodyScrim dims the body behind a draggable bottom sheet. It should
+      // cover the entire body, including any region the body extends behind
+      // when extendBodyBehindKeyboard is true — otherwise content visible
+      // through a translucent keyboard would appear undimmed while the rest of
+      // the body is dimmed.
       final bottomSheetScrimConstraints = BoxConstraints(
         maxWidth: fullWidthConstraints.maxWidth,
-        maxHeight: contentBottom,
+        maxHeight: bodyContentBottom,
       );
       layoutChild(_ScaffoldSlot.bodyScrim, bottomSheetScrimConstraints);
       positionChild(_ScaffoldSlot.bodyScrim, Offset.zero);
@@ -1303,7 +1335,8 @@ class _ScaffoldLayout extends MultiChildLayoutDelegate {
         oldDelegate.previousFloatingActionButtonLocation != previousFloatingActionButtonLocation ||
         oldDelegate.currentFloatingActionButtonLocation != currentFloatingActionButtonLocation ||
         oldDelegate.extendBody != extendBody ||
-        oldDelegate.extendBodyBehindAppBar != extendBodyBehindAppBar;
+        oldDelegate.extendBodyBehindAppBar != extendBodyBehindAppBar ||
+        oldDelegate.extendBodyBehindKeyboard != extendBodyBehindKeyboard;
   }
 }
 
@@ -1708,6 +1741,7 @@ class Scaffold extends StatefulWidget {
     this.extendBody = false,
     this.drawerBarrierDismissible = true,
     this.extendBodyBehindAppBar = false,
+    this.extendBodyBehindKeyboard = false,
     this.drawerScrimColor,
     this.bottomSheetScrimBuilder = _defaultBottomSheetScrimBuilder,
     this.drawerEdgeDragWidth,
@@ -1759,6 +1793,39 @@ class Scaffold extends StatefulWidget {
   ///    of the scaffold.
   final bool extendBodyBehindAppBar;
 
+  /// Whether the [body] should extend behind the soft keyboard.
+  ///
+  /// Defaults to false. When set to true, [body] is laid out and painted
+  /// across the full available height even when
+  /// [MediaQueryData.viewInsets.bottom] is non-zero (typically because the
+  /// on-screen keyboard is visible). Unlike the default
+  /// [resizeToAvoidBottomInset] behavior, the keyboard's view inset is left
+  /// intact in the inherited [MediaQuery], so descendants can read it and
+  /// pad themselves (for example by giving a [ListView] a
+  /// `padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom)`)
+  /// to keep their interactive contents above the keyboard.
+  ///
+  /// This is useful on platforms where the keyboard is translucent (such as
+  /// iOS 26+ "Liquid Glass") — letting the app paint under the keyboard
+  /// avoids exposing the modal barrier or window clear color through the
+  /// keyboard.
+  ///
+  /// The [floatingActionButton], [bottomSheet] and [snackBar] continue to
+  /// position above the keyboard; only the [body] (and the body scrim shown
+  /// behind a draggable bottom sheet, so it dims the full body) is allowed
+  /// to extend behind it.
+  ///
+  /// This property has no effect when [resizeToAvoidBottomInset] is false,
+  /// since in that case the body already fills the full height.
+  ///
+  /// See also:
+  ///
+  ///  * [extendBody], which extends the height of the body to the bottom
+  ///    of the scaffold (behind the [bottomNavigationBar]).
+  ///  * [extendBodyBehindAppBar], which extends the height of the body
+  ///    to the top of the scaffold (behind the [appBar]).
+  final bool extendBodyBehindKeyboard;
+
   /// An app bar to display at the top of the scaffold.
   final PreferredSizeWidget? appBar;
 
@@ -1768,7 +1835,10 @@ class Scaffold extends StatefulWidget {
   /// [MediaQuery]'s [MediaQueryData.viewInsets], and behind the
   /// [floatingActionButton] and [drawer]. If [resizeToAvoidBottomInset] is
   /// false then the body is not resized when the onscreen keyboard appears,
-  /// i.e. it is not inset by `viewInsets.bottom`.
+  /// i.e. it is not inset by `viewInsets.bottom`. If
+  /// [extendBodyBehindKeyboard] is true then the body extends behind the
+  /// keyboard region while [MediaQueryData.viewInsets] remains visible to
+  /// descendants.
   ///
   /// The widget in the body of the scaffold is positioned at the top-left of
   /// the available space between the app bar and the bottom of the scaffold. To
@@ -3031,7 +3101,10 @@ class ScaffoldState extends State<Scaffold>
       removeRightPadding: false,
       removeBottomPadding:
           widget.bottomNavigationBar != null || widget.persistentFooterButtons != null,
-      removeBottomInset: _resizeToAvoidBottomInset,
+      // When the body is extending behind the keyboard, viewInsets.bottom
+      // must remain visible to descendants so they can read it and pad
+      // themselves to keep their interactive contents above the keyboard.
+      removeBottomInset: _resizeToAvoidBottomInset && !widget.extendBodyBehindKeyboard,
     );
     if (_showBodyScrim) {
       _addIfNonNull(
@@ -3243,6 +3316,8 @@ class ScaffoldState extends State<Scaffold>
                   delegate: _ScaffoldLayout(
                     extendBody: widget.extendBody,
                     extendBodyBehindAppBar: widget.extendBodyBehindAppBar,
+                    extendBodyBehindKeyboard:
+                        widget.extendBodyBehindKeyboard && _resizeToAvoidBottomInset,
                     minInsets: minInsets,
                     minViewPadding: minViewPadding,
                     currentFloatingActionButtonLocation: _floatingActionButtonLocation!,

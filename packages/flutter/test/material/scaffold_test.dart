@@ -315,6 +315,293 @@ void main() {
     expect(bodyBox.size, equals(const Size(800.0, 0.0)));
   });
 
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard lets body extend behind viewInsets.bottom',
+    (WidgetTester tester) async {
+      final Key bodyKey = UniqueKey();
+
+      Widget boilerplate({required bool extendBodyBehindKeyboard}) {
+        return Localizations(
+          locale: const Locale('en', 'us'),
+          delegates: const <LocalizationsDelegate<dynamic>>[
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+              child: Scaffold(
+                extendBodyBehindKeyboard: extendBodyBehindKeyboard,
+                body: Container(key: bodyKey),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Default behavior: body shrinks to avoid the 200px bottom inset.
+      await tester.pumpWidget(boilerplate(extendBodyBehindKeyboard: false));
+      RenderBox bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 400.0)));
+
+      // With extendBodyBehindKeyboard: body fills the full 600px screen height.
+      await tester.pumpWidget(boilerplate(extendBodyBehindKeyboard: true));
+      bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 600.0)));
+
+      // viewInsets.bottom is still visible to descendants of the body so
+      // they can read it and pad themselves above the keyboard.
+      final BuildContext bodyContext = tester.element(find.byKey(bodyKey));
+      expect(MediaQuery.viewInsetsOf(bodyContext).bottom, 200.0);
+    },
+  );
+
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard is a no-op when resizeToAvoidBottomInset is false',
+    (WidgetTester tester) async {
+      final Key bodyKey = UniqueKey();
+      await tester.pumpWidget(
+        Localizations(
+          locale: const Locale('en', 'us'),
+          delegates: const <LocalizationsDelegate<dynamic>>[
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+              child: Scaffold(
+                resizeToAvoidBottomInset: false,
+                extendBodyBehindKeyboard: true,
+                body: Container(key: bodyKey),
+              ),
+            ),
+          ),
+        ),
+      );
+      // resizeToAvoidBottomInset: false already gives the body the full
+      // height, and extendBodyBehindKeyboard does not change that.
+      final RenderBox bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 600.0)));
+    },
+  );
+
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard does not push the FloatingActionButton under the keyboard',
+    (WidgetTester tester) async {
+      const fabKey = Key('fab');
+      await tester.pumpWidget(
+        Localizations(
+          locale: const Locale('en', 'us'),
+          delegates: const <LocalizationsDelegate<dynamic>>[
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: const Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+              child: Scaffold(
+                extendBodyBehindKeyboard: true,
+                body: SizedBox.expand(),
+                floatingActionButton: FloatingActionButton(
+                  key: fabKey,
+                  onPressed: null,
+                  child: Icon(Icons.add),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // FAB is positioned above viewInsets.bottom (i.e. above the keyboard),
+      // even though the body extends behind it. With the default endFloat
+      // location: contentBottom = 600 - 200 = 400 and the FAB is inset by
+      // kFloatingActionButtonMargin (16) → FAB bottom-right.dy = 384.
+      final Offset fabBottomRight = tester.getBottomRight(find.byKey(fabKey));
+      expect(fabBottomRight.dy, 384.0);
+    },
+  );
+
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard composes with extendBody when keyboard is taller than bottom nav',
+    (WidgetTester tester) async {
+      final Key bodyKey = UniqueKey();
+      const navKey = Key('nav');
+
+      Widget boilerplate({required bool extendBodyBehindKeyboard}) {
+        return Localizations(
+          locale: const Locale('en', 'us'),
+          delegates: const <LocalizationsDelegate<dynamic>>[
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+              child: Scaffold(
+                extendBody: true,
+                extendBodyBehindKeyboard: extendBodyBehindKeyboard,
+                bottomNavigationBar: const SizedBox(key: navKey, height: 56.0),
+                body: Container(key: bodyKey),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Without extendBodyBehindKeyboard: extendBody is disabled because the
+      // keyboard is taller than the bottom nav bar (200 > 56), so the body
+      // shrinks to avoid the keyboard: 600 - 200 = 400.
+      await tester.pumpWidget(boilerplate(extendBodyBehindKeyboard: false));
+      RenderBox bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 400.0)));
+
+      // With extendBodyBehindKeyboard: the keyboard no longer disables
+      // extendBody. The body extends behind both the keyboard and the bottom
+      // nav, filling the full screen height (600).
+      await tester.pumpWidget(boilerplate(extendBodyBehindKeyboard: true));
+      bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 600.0)));
+
+      // The bottom nav stays at its usual position (under the keyboard, since
+      // bottom - bottomNavHeight = 600 - 56 = 544 > 600 - 200 = 400).
+      expect(tester.getTopLeft(find.byKey(navKey)).dy, 544.0);
+    },
+  );
+
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard: body stops at bottom nav when extendBody is false',
+    (WidgetTester tester) async {
+      // Use a keyboard taller than the bottom nav so contentBottom (keyboard
+      // aware: 600 - 200 = 400) and bodyContentBottom (nav aware: 600 - 56 =
+      // 544) diverge. This distinguishes a correct implementation that uses
+      // bodyContentBottom for the body slot from one that mistakenly uses
+      // contentBottom: the body height should be 544, not 400.
+      final Key bodyKey = UniqueKey();
+      await tester.pumpWidget(
+        Localizations(
+          locale: const Locale('en', 'us'),
+          delegates: const <LocalizationsDelegate<dynamic>>[
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+              child: Scaffold(
+                extendBodyBehindKeyboard: true,
+                bottomNavigationBar: const SizedBox(height: 56.0),
+                body: Container(key: bodyKey),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // 600 - 56 (nav) = 544. Body extends past the keyboard top (400) but
+      // stops at the bottom nav top, since extendBody is not set.
+      final RenderBox bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 544.0)));
+    },
+  );
+
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard: persistent bottomSheet stays above keyboard',
+    (WidgetTester tester) async {
+      const sheetKey = Key('sheet');
+      final Key bodyKey = UniqueKey();
+      await tester.pumpWidget(
+        Localizations(
+          locale: const Locale('en', 'us'),
+          delegates: const <LocalizationsDelegate<dynamic>>[
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+              child: Scaffold(
+                extendBodyBehindKeyboard: true,
+                body: Container(key: bodyKey),
+                bottomSheet: const SizedBox(key: sheetKey, height: 100.0),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Body extends to the full screen height (no bottom nav).
+      final RenderBox bodyBox = tester.renderObject(find.byKey(bodyKey));
+      expect(bodyBox.size, equals(const Size(800.0, 600.0)));
+
+      // The bottom sheet is positioned above the keyboard: its bottom edge is
+      // at contentBottom = 600 - 200 = 400.
+      final Offset sheetBottomLeft = tester.getBottomLeft(find.byKey(sheetKey));
+      expect(sheetBottomLeft.dy, 400.0);
+    },
+  );
+
+  testWidgets(
+    'Scaffold extendBodyBehindKeyboard: bodyScrim covers the extended body region',
+    (WidgetTester tester) async {
+      // Use a custom bottomSheetScrimBuilder with LayoutBuilder so we can
+      // read the constraints the layout delegate hands the scrim. They
+      // should reach all the way to the extended body bottom, not just
+      // contentBottom.
+      final draggableController = DraggableScrollableController();
+      addTearDown(draggableController.dispose);
+      late BoxConstraints scrimConstraints;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 200.0)),
+            child: Scaffold(
+              extendBodyBehindKeyboard: true,
+              body: const SizedBox.expand(),
+              bottomSheetScrimBuilder: (BuildContext context, Animation<double> animation) {
+                return LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    scrimConstraints = constraints;
+                    return const SizedBox.expand();
+                  },
+                );
+              },
+              bottomSheet: DraggableScrollableSheet(
+                expand: false,
+                controller: draggableController,
+                builder: (BuildContext context, ScrollController scrollController) {
+                  return SingleChildScrollView(
+                    controller: scrollController,
+                    child: const SizedBox(height: 600),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Drag the sheet up to a dominant extent so the body scrim becomes
+      // visible (the scrim only shows once the sheet's extentRemaining drops
+      // below _kBottomSheetDominatesPercentage).
+      draggableController.jumpTo(1.0);
+      await tester.pump();
+
+      // The scrim's max height should equal bodyContentBottom (600), not
+      // contentBottom (400). Without extendBodyBehindKeyboard the max height
+      // would be 400.
+      expect(scrimConstraints.maxHeight, 600.0);
+    },
+  );
+
   testWidgets('Floating action entrance/exit animation', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(

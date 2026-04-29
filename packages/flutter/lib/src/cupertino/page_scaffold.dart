@@ -45,6 +45,7 @@ class CupertinoPageScaffold extends StatefulWidget {
     this.navigationBar,
     this.backgroundColor,
     this.resizeToAvoidBottomInset = true,
+    this.extendContentBehindKeyboard = false,
     required this.child,
   });
 
@@ -84,6 +85,25 @@ class CupertinoPageScaffold extends StatefulWidget {
   ///
   /// Defaults to true.
   final bool resizeToAvoidBottomInset;
+
+  /// Whether the [child] should extend behind the soft keyboard.
+  ///
+  /// Defaults to false. When set to true, the scaffold's [child] is laid out
+  /// and painted across the full available height even when
+  /// [MediaQueryData.viewInsets.bottom] is non-zero (typically because the
+  /// on-screen keyboard is visible). Unlike the default
+  /// [resizeToAvoidBottomInset] behavior, the keyboard's view inset is left
+  /// intact in the inherited [MediaQuery], so descendants can read it and
+  /// pad themselves to keep their interactive contents above the keyboard.
+  ///
+  /// This is useful on platforms where the keyboard is translucent (such as
+  /// iOS 26+ "Liquid Glass") — letting the app paint under the keyboard
+  /// avoids exposing the modal barrier or window clear color through the
+  /// keyboard.
+  ///
+  /// This property has no effect when [resizeToAvoidBottomInset] is false,
+  /// since in that case the child already fills the full height.
+  final bool extendContentBehindKeyboard;
 
   @override
   State<CupertinoPageScaffold> createState() => _CupertinoPageScaffoldState();
@@ -144,6 +164,13 @@ class _CupertinoPageScaffoldState extends State<CupertinoPageScaffold> with Widg
         CupertinoTheme.of(context).scaffoldBackgroundColor;
 
     final MediaQueryData existingMediaQuery = MediaQuery.of(context);
+    // The bottom inset is consumed by this scaffold (turned into Padding) only
+    // when resizeToAvoidBottomInset is true AND extendContentBehindKeyboard
+    // is false. When extending behind the keyboard, the inset is left intact
+    // so descendants (scroll views, focused EditableTexts) can still pad
+    // themselves above the keyboard.
+    final bool consumeBottomInset =
+        widget.resizeToAvoidBottomInset && !widget.extendContentBehindKeyboard;
     if (widget.navigationBar != null) {
       // TODO(xster): Use real size after partial layout instead of preferred size.
       // https://github.com/flutter/flutter/issues/12912
@@ -151,11 +178,11 @@ class _CupertinoPageScaffoldState extends State<CupertinoPageScaffold> with Widg
           widget.navigationBar!.preferredSize.height + existingMediaQuery.padding.top;
 
       // Propagate bottom padding and include viewInsets if appropriate
-      final double bottomPadding = widget.resizeToAvoidBottomInset
+      final double bottomPadding = consumeBottomInset
           ? existingMediaQuery.viewInsets.bottom
           : 0.0;
 
-      final EdgeInsets newViewInsets = widget.resizeToAvoidBottomInset
+      final EdgeInsets newViewInsets = consumeBottomInset
           // The insets are consumed by the scaffolds and no longer exposed to
           // the descendant subtree.
           ? existingMediaQuery.viewInsets.copyWith(bottom: 0.0)
@@ -189,7 +216,7 @@ class _CupertinoPageScaffoldState extends State<CupertinoPageScaffold> with Widg
           ),
         );
       }
-    } else if (widget.resizeToAvoidBottomInset) {
+    } else if (consumeBottomInset) {
       // If there is no navigation bar, still may need to add padding in order
       // to support resizeToAvoidBottomInset.
       paddedContent = MediaQuery(

@@ -475,11 +475,21 @@ class MediaQueryData {
   ///    platformBrightness defined for a [BuildContext].
   final Brightness platformBrightness;
 
-  /// The parts of the display that are completely obscured by system UI,
-  /// typically by the device's keyboard.
+  /// The parts of the display that are obscured by system UI, typically by
+  /// the device's keyboard.
   ///
   /// When a mobile device's keyboard is visible `viewInsets.bottom`
   /// corresponds to the top of the keyboard.
+  ///
+  /// On most platforms this region is fully opaque, but on some (such as
+  /// iOS 26+ "Liquid Glass" soft keyboards) it may be translucent — content
+  /// drawn underneath will show through. Widgets that resize to avoid the
+  /// keyboard (such as [Scaffold] with `resizeToAvoidBottomInset: true`)
+  /// leave the body slot un-drawn in this region by default; opt in to
+  /// [Scaffold.extendBodyBehindKeyboard] (or
+  /// [CupertinoPageScaffold.extendContentBehindKeyboard]) to keep painting
+  /// underneath. Descendants that want to keep their interactive contents
+  /// above the keyboard can read this value and pad themselves accordingly.
   ///
   /// This value is independent of the [padding] and [viewPadding]. viewPadding
   /// is measured from the edges of the [MediaQuery] widget's bounds. Padding is

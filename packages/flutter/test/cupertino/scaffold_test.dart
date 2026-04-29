@@ -204,6 +204,95 @@ void main() {
     },
   );
 
+  testWidgets(
+    'extendContentBehindKeyboard lets child extend behind viewInsets.bottom (no nav bar)',
+    (WidgetTester tester) async {
+      late BuildContext childContext;
+
+      Widget buildScaffold({required bool extendContentBehindKeyboard}) {
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: MediaQuery(
+            data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 100.0)),
+            child: CupertinoPageScaffold(
+              extendContentBehindKeyboard: extendContentBehindKeyboard,
+              child: Builder(
+                builder: (BuildContext context) {
+                  childContext = context;
+                  return Container();
+                },
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Default behavior: child shrinks to avoid the 100px bottom inset.
+      await tester.pumpWidget(buildScaffold(extendContentBehindKeyboard: false));
+      expect(tester.getSize(find.byType(Container)).height, 600.0 - 100.0);
+      expect(MediaQuery.of(childContext).viewInsets.bottom, 0);
+
+      // With extendContentBehindKeyboard: child fills the full screen and
+      // viewInsets.bottom remains visible to descendants.
+      await tester.pumpWidget(buildScaffold(extendContentBehindKeyboard: true));
+      expect(tester.getSize(find.byType(Container)).height, 600.0);
+      expect(MediaQuery.of(childContext).viewInsets.bottom, 100.0);
+    },
+  );
+
+  testWidgets(
+    'extendContentBehindKeyboard lets child extend behind viewInsets.bottom (with translucent nav bar)',
+    (WidgetTester tester) async {
+      late BuildContext childContext;
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: MediaQuery(
+            data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 100.0)),
+            child: CupertinoPageScaffold(
+              extendContentBehindKeyboard: true,
+              navigationBar: const CupertinoNavigationBar(middle: Text('Translucent')),
+              child: Builder(
+                builder: (BuildContext context) {
+                  childContext = context;
+                  return Container();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // The nav bar still shrinks the child by its preferred height (44),
+      // but the keyboard inset no longer does.
+      expect(tester.getSize(find.byType(Container)).height, 600.0);
+      expect(MediaQuery.of(childContext).viewInsets.bottom, 100.0);
+    },
+  );
+
+  testWidgets(
+    'extendContentBehindKeyboard is a no-op when resizeToAvoidBottomInset is false',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: MediaQuery(
+            data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 100.0)),
+            child: CupertinoPageScaffold(
+              resizeToAvoidBottomInset: false,
+              extendContentBehindKeyboard: true,
+              child: Container(),
+            ),
+          ),
+        ),
+      );
+
+      // resizeToAvoidBottomInset: false already gives the child the full
+      // height; extendContentBehindKeyboard does not change that.
+      expect(tester.getSize(find.byType(Container)).height, 600.0);
+    },
+  );
+
   testWidgets('Contents are between opaque bars', (WidgetTester tester) async {
     const page1Center = Center();
 
