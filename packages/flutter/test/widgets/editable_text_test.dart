@@ -15515,7 +15515,7 @@ void main() {
       var buildCount = 0;
 
       await tester.pumpWidget(
-        MaterialApp(
+        TestWidgetsApp(
           home: Align(
             alignment: Alignment.topLeft,
             child: SizedBox(
@@ -15526,23 +15526,17 @@ void main() {
                   return EditableText(
                     maxLines: 10,
                     controller: controller,
-                    showSelectionHandles: true,
                     autofocus: true,
                     focusNode: focusNode,
-                    style: Typography.material2018().black.titleMedium!,
-                    cursorColor: Colors.blue,
-                    backgroundCursorColor: Colors.grey,
+                    style: const TextStyle(fontSize: 14.0),
+                    cursorColor: const Color(0xFF000000),
+                    backgroundCursorColor: const Color(0xFF000000),
                     keyboardType: TextInputType.text,
-                    textAlign: TextAlign.right,
-                    selectionControls: materialTextSelectionHandleControls,
+                    selectionControls: testTextSelectionHandleControls,
                     contextMenuBuilder:
                         (BuildContext context, EditableTextState editableTextState) {
                           buildCount++;
-                          return SizedBox(
-                            width: 10.0,
-                            height: 10.0,
-                            child: Text('Menu $buildCount'),
-                          );
+                          return _EditableTextStatefulMenu(value: buildCount);
                         },
                   );
                 },
@@ -15555,16 +15549,18 @@ void main() {
       await tester.pump(); // Wait for autofocus to take effect.
 
       final Finder textFinder = find.byType(EditableText);
-      await tester.longPress(textFinder);
       tester.state<EditableTextState>(textFinder).showToolbar();
       await tester.pumpAndSettle();
 
-      expect(find.text('Menu 1'), findsOneWidget);
+      expect(find.text('Initial: 1, Current: 1'), findsOneWidget);
 
+      // First rebuild: the inline lambda produces a new function reference.
+      // With the fix the entry is updated in-place and initState is never
+      // called again.
       setState(() {});
-      await tester.pumpAndSettle();
 
-      expect(find.text('Menu 2'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('Initial: 1, Current: 2'), findsOneWidget);
     },
     skip: kIsWeb, // [intended] on web the browser handles the context menu.
   );
@@ -19054,4 +19050,37 @@ class FakeFlutterView extends TestFlutterView {
 
   @override
   final int viewId;
+}
+
+// A stateful context menu.
+//
+// When the overlay entry is updated in-place (via OverlayEntry.markNeedsBuild),
+// initState is NOT called again and initialValue remains unchanged. When the
+// overlay entry is recreated from scratch, initState runs again and initialValue is reset to
+// the new widget.value.
+class _EditableTextStatefulMenu extends StatefulWidget {
+  const _EditableTextStatefulMenu({required this.value});
+
+  final int value;
+
+  @override
+  State<_EditableTextStatefulMenu> createState() => _EditableTextStatefulMenuState();
+}
+
+class _EditableTextStatefulMenuState extends State<_EditableTextStatefulMenu> {
+  late int initialValue;
+
+  @override
+  void initState() {
+    super.initState();
+    initialValue = widget.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Initial: $initialValue, Current: ${widget.value}',
+      textDirection: TextDirection.ltr,
+    );
+  }
 }
