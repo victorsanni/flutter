@@ -15508,6 +15508,68 @@ void main() {
   );
 
   testWidgets(
+    'contextMenuBuilder can be updated with inline lambda without crash',
+    (WidgetTester tester) async {
+      // Regression test for https://github.com/flutter/flutter/issues/155514.
+      late StateSetter setState;
+      var buildCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 400,
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter localSetState) {
+                  setState = localSetState;
+                  return EditableText(
+                    maxLines: 10,
+                    controller: controller,
+                    showSelectionHandles: true,
+                    autofocus: true,
+                    focusNode: focusNode,
+                    style: Typography.material2018().black.titleMedium!,
+                    cursorColor: Colors.blue,
+                    backgroundCursorColor: Colors.grey,
+                    keyboardType: TextInputType.text,
+                    textAlign: TextAlign.right,
+                    selectionControls: materialTextSelectionHandleControls,
+                    contextMenuBuilder:
+                        (BuildContext context, EditableTextState editableTextState) {
+                          buildCount++;
+                          return SizedBox(
+                            width: 10.0,
+                            height: 10.0,
+                            child: Text('Menu $buildCount'),
+                          );
+                        },
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump(); // Wait for autofocus to take effect.
+
+      final Finder textFinder = find.byType(EditableText);
+      await tester.longPress(textFinder);
+      tester.state<EditableTextState>(textFinder).showToolbar();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menu 1'), findsOneWidget);
+
+      setState(() {});
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menu 2'), findsOneWidget);
+    },
+    skip: kIsWeb, // [intended] on web the browser handles the context menu.
+  );
+
+  testWidgets(
     'selectionControls can be updated',
     (WidgetTester tester) async {
       // Regression test for https://github.com/flutter/flutter/issues/142077.
