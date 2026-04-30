@@ -15516,37 +15516,22 @@ void main() {
 
       await tester.pumpWidget(
         TestWidgetsApp(
-          home: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: 400,
-              child: StatefulBuilder(
-                builder: (BuildContext context, StateSetter localSetState) {
-                  setState = localSetState;
-                  return EditableText(
-                    maxLines: 10,
-                    controller: controller,
-                    autofocus: true,
-                    focusNode: focusNode,
-                    style: const TextStyle(fontSize: 14.0),
-                    cursorColor: const Color(0xFF000000),
-                    backgroundCursorColor: const Color(0xFF000000),
-                    keyboardType: TextInputType.text,
-                    selectionControls: testTextSelectionHandleControls,
-                    contextMenuBuilder:
-                        (BuildContext context, EditableTextState editableTextState) {
-                          buildCount++;
-                          return _EditableTextStatefulMenu(value: buildCount);
-                        },
-                  );
+          home: StatefulBuilder(
+            builder: (BuildContext context, StateSetter localSetState) {
+              setState = localSetState;
+              return TestTextField(
+                autofocus: true,
+                contextMenuBuilder: (BuildContext context, EditableTextState editableTextState) {
+                  buildCount++;
+                  return _EditableTextStatefulMenu(value: buildCount);
                 },
-              ),
-            ),
+              );
+            },
           ),
         ),
       );
 
-      await tester.pump(); // Wait for autofocus to take effect.
+      await tester.pump();
 
       final Finder textFinder = find.byType(EditableText);
       tester.state<EditableTextState>(textFinder).showToolbar();
@@ -19055,9 +19040,10 @@ class FakeFlutterView extends TestFlutterView {
 // A stateful context menu.
 //
 // When the overlay entry is updated in-place (via OverlayEntry.markNeedsBuild),
-// initState is NOT called again and initialValue remains unchanged. When the
-// overlay entry is recreated from scratch, initState runs again and initialValue is reset to
-// the new widget.value.
+// initState is not called again and initialValue remains unchanged.
+//
+// When the overlay entry is recreated from scratch, initState runs again and
+// initialValue is reset to the new widget.value.
 class _EditableTextStatefulMenu extends StatefulWidget {
   const _EditableTextStatefulMenu({required this.value});
 
