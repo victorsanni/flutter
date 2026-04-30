@@ -2608,7 +2608,17 @@ final class _RenderDeferredLayoutBox extends RenderProxyBox
   }
 
   @override
-  RenderObject? get debugLayoutParent => _layoutSurrogate;
+  RenderObject? get debugLayoutParent {
+    // The logical layout parent is the surrogate, but during
+    // _OverlayPortalElement.activate this box is re-adopted by the theater
+    // before attachRenderObject reattaches the surrogate. Returning the
+    // detached surrogate would dead-end the _debugCanPerformMutations walk,
+    // tripping the layout-mutation assert.
+    //
+    // Falling back to the actual render parent (the theater) lets the walk
+    // reach a node where mutation is allowed.
+    return _layoutSurrogate.attached ? _layoutSurrogate : parent;
+  }
 
   /// Whether this RenderBox's layout method is currently being called by the
   /// theater or the layoutSurrogate's [performLayout] implementation.

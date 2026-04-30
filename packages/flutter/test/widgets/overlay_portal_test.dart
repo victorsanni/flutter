@@ -2706,6 +2706,83 @@ void main() {
         expect(find.byKey(oldOverlayKey), findsNothing);
       },
     );
+
+    group('does not assert after reassemble', () {
+      // Regression tests for https://github.com/flutter/flutter/issues/177693.
+      Future<void> runReparentingRegressionTest(
+        WidgetTester tester, {
+        required WidgetBuilder overlayChildBuilder,
+      }) async {
+        final GlobalKey portalKey = GlobalKey(debugLabel: 'portal');
+        var wrapped = false;
+
+        late final OverlayEntry overlayEntry;
+        addTearDown(
+          () => overlayEntry
+            ..remove()
+            ..dispose(),
+        );
+
+        Widget buildSubtree() {
+          final Widget keyed = KeyedSubtree(
+            key: portalKey,
+            child: OverlayPortal(
+              controller: controller1,
+              overlayChildBuilder: overlayChildBuilder,
+              child: const SizedBox(),
+            ),
+          );
+          return wrapped ? SizedBox(child: keyed) : keyed;
+        }
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Overlay(
+              initialEntries: <OverlayEntry>[
+                overlayEntry = OverlayEntry(
+                  builder: (BuildContext context) {
+                    return LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        return buildSubtree();
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+
+        wrapped = true;
+        tester.binding.reassembleApplication();
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+      }
+
+      testWidgets('when a GlobalKey-keyed ancestor is reparented inside a LayoutBuilder', (
+        WidgetTester tester,
+      ) async {
+        await runReparentingRegressionTest(
+          tester,
+          overlayChildBuilder: (BuildContext context) => const SizedBox(),
+        );
+      });
+
+      testWidgets('when the overlay child is a LayoutBuilder reparented inside a LayoutBuilder', (
+        WidgetTester tester,
+      ) async {
+        await runReparentingRegressionTest(
+          tester,
+          overlayChildBuilder: (BuildContext context) {
+            return LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) => const SizedBox(),
+            );
+          },
+        );
+      });
+    });
   });
 
   group('Paint order', () {
