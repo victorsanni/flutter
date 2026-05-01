@@ -39,11 +39,6 @@ class ContextMenuController {
   /// This is static because only one context menu can be displayed at one time.
   static WidgetBuilder? _contextMenuBuilder;
 
-  /// The captured themes for the context menu.
-  ///
-  /// This is static because only one context menu can be displayed at one time.
-  static CapturedThemes? _capturedThemes;
-
   /// The currently shown instance, if any.
   static ContextMenuController? _shownInstance;
 
@@ -64,10 +59,6 @@ class ContextMenuController {
       // Update the currently-shown menu in-place by swapping the builder
       // and captured themes and rebuilding the existing overlay entry.
       _contextMenuBuilder = contextMenuBuilder;
-      _capturedThemes = InheritedTheme.capture(
-        from: context,
-        to: Navigator.maybeOf(context)?.context,
-      );
       _menuOverlayEntry?.markNeedsBuild();
       return;
     }
@@ -79,14 +70,14 @@ class ContextMenuController {
       debugRequiredFor: debugRequiredFor,
     );
     _contextMenuBuilder = contextMenuBuilder;
-    _capturedThemes = InheritedTheme.capture(
-      from: context,
-      to: Navigator.maybeOf(context)?.context,
-    );
 
     _menuOverlayEntry = OverlayEntry(
       builder: (BuildContext context) {
-        return _capturedThemes!.wrap(_contextMenuBuilder!(context));
+        final CapturedThemes capturedThemes = InheritedTheme.capture(
+          from: context,
+          to: Navigator.maybeOf(context)?.context,
+        );
+        return capturedThemes.wrap(_contextMenuBuilder!(context));
       },
     );
     _shownInstance = this;
@@ -108,7 +99,6 @@ class ContextMenuController {
     _menuOverlayEntry?.dispose();
     _menuOverlayEntry = null;
     _contextMenuBuilder = null;
-    _capturedThemes = null;
     if (_shownInstance != null) {
       _shownInstance!.onRemove?.call();
       _shownInstance = null;
